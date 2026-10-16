@@ -1,0 +1,50 @@
+{% extends "dashboard/base_dash.html" %}
+{% block title %}{{ level.title }}{% endblock %}
+{% block dash %}
+<p class="crumbs"><a href="{% url 'dashboard:course_list' %}">Курсы</a> / <a href="{% url 'dashboard:course_edit' course.pk %}">{{ course.title }}</a></p>
+<div class="page-head"><h1>{{ level.title }}</h1></div>
+
+<form method="post" class="panel" novalidate>
+  {% csrf_token %}
+  <div class="form-grid" style="grid-template-columns:2fr 1fr 1fr">
+    {% include "partials/field.html" with field=form.title %}
+    {% include "partials/field.html" with field=form.order %}
+    {% include "partials/field.html" with field=form.pass_threshold %}
+  </div>
+  <div class="actions">
+    <button class="btn btn-primary" type="submit">Сохранить уровень</button>
+    <a class="btn btn-ghost" href="{% url 'dashboard:level_delete' level.pk %}">Удалить уровень</a>
+  </div>
+</form>
+
+<section class="panel">
+  <div class="page-head" style="margin-bottom:8px"><h2 style="margin:0">Уроки</h2><a class="btn btn-primary btn-sm" href="{% url 'dashboard:lesson_create' level.pk %}">Добавить урок</a></div>
+  <ul class="list-plain">
+    {% for l in lessons %}
+      <li><span class="badge">{{ l.order }}</span>
+        <div class="grow"><a href="{% url 'dashboard:lesson_edit' l.pk %}">{{ l.title }}</a>
+          <div class="small muted">{% if l.video_file %}Видео: файл{% elif l.video_url %}Видео: ссылка{% else %}Без видео{% endif %}, материалов: {{ l.materials.count }}</div></div>
+        <a class="btn btn-secondary btn-sm" href="{% url 'dashboard:lesson_edit' l.pk %}">Изменить</a>
+      </li>
+    {% empty %}<li class="muted">В уровне пока нет уроков.</li>{% endfor %}
+  </ul>
+</section>
+
+<section class="panel">
+  <div class="page-head" style="margin-bottom:8px"><h2 style="margin:0">Тест уровня</h2><a class="btn btn-primary btn-sm" href="{% url 'dashboard:question_create' level.pk %}">Добавить вопрос</a></div>
+  <p class="small muted">Порог сдачи — {{ level.pass_threshold }}%. Если вопросов нет, уровень считается пройденным после просмотра всех уроков.</p>
+  <ul class="list-plain">
+    {% for q in questions %}
+      <li style="align-items:flex-start">
+        <span class="badge">{{ forloop.counter }}</span>
+        <div class="grow"><div>{{ q.text|linebreaksbr }}</div>
+          <ul class="q-choices">{% for c in q.choices.all %}<li{% if c.is_correct %} class="right"{% endif %}>{{ c.text }}{% if c.is_correct %} — правильный{% endif %}</li>{% endfor %}</ul></div>
+        <div class="row-actions">
+          <a class="btn btn-secondary btn-sm" href="{% url 'dashboard:question_edit' q.pk %}">Изменить</a>
+          <form method="post" action="{% url 'dashboard:question_delete' q.pk %}" class="inline-form" data-confirm="Удалить этот вопрос?">{% csrf_token %}<button class="btn btn-ghost btn-sm" type="submit">Удалить</button></form>
+        </div>
+      </li>
+    {% empty %}<li class="muted">Вопросов пока нет.</li>{% endfor %}
+  </ul>
+</section>
+{% endblock %}

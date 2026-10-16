@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Мой прогресс{% endblock %}
+{% block content %}
+<div class="wrap page">
+  <div class="page-head"><h1>Мой прогресс</h1></div>
+  <div class="stat-row">
+    <div class="stat"><strong>{{ items|length }}</strong><span>курсов в обучении</span></div>
+    <div class="stat"><strong>{{ total_done }}</strong><span>курсов пройдено</span></div>
+    <div class="stat"><strong>{{ passed_tests }}</strong><span>тестов сдано</span></div>
+  </div>
+
+  {% if items %}
+    <h2>По курсам</h2>
+    {% for s in items %}
+      <section class="panel">
+        <div class="page-head" style="margin-bottom:12px">
+          <h3 style="margin:0"><a href="{{ s.course.get_absolute_url }}">{{ s.course.title }}</a></h3>
+          {% if s.enrollment.is_completed %}<a class="badge ok" href="{% url 'learning:certificate' s.enrollment.certificate.number %}">Пройден, сертификат</a>{% endif %}
+        </div>
+        <div class="progress-row" style="margin-bottom:16px">
+          <div class="progress"><span style="width:{{ s.percent }}%"></span></div><strong>{{ s.percent }}%</strong>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Уровень</th><th>Уроки</th><th>Тест</th><th>Статус</th></tr></thead>
+            <tbody>
+              {% for ls in s.levels %}
+                <tr>
+                  <td>{{ forloop.counter }}. {{ ls.level.title }}</td>
+                  <td>{{ ls.lessons_watched }} из {{ ls.lessons|length }}</td>
+                  <td>{% if not ls.has_quiz %}—{% elif ls.best_score is not None %}{{ ls.best_score }}%{% else %}не сдавался{% endif %}</td>
+                  <td>{% if not ls.unlocked %}<span class="badge">закрыт</span>{% elif ls.completed %}<span class="badge ok">пройден</span>{% else %}<span class="badge mark">в процессе</span>{% endif %}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    {% endfor %}
+
+    <h2 style="margin-top:36px">Последние попытки тестов</h2>
+    {% if attempts %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Дата</th><th>Курс</th><th>Уровень</th><th class="num">Результат</th><th>Итог</th></tr></thead>
+          <tbody>
+            {% for a in attempts %}
+              <tr>
+                <td>{{ a.created_at|date:"d.m.Y H:i" }}</td>
+                <td>{{ a.level.course.title }}</td>
+                <td>{{ a.level.title }}</td>
+                <td class="num">{{ a.score }}% ({{ a.correct }}/{{ a.total }})</td>
+                <td>{% if a.passed %}<span class="badge ok">сдан</span>{% else %}<span class="badge danger">не сдан</span>{% endif %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="muted">Вы ещё не сдавали тесты.</p>
+    {% endif %}
+  {% else %}
+    <div class="empty">
+      <h2>Здесь появится ваш прогресс</h2>
+      <p>Запишитесь на курс, и мы покажем, сколько пройдено и как сданы тесты.</p>
+      <a class="btn btn-primary" href="{% url 'courses:catalog' %}">Выбрать курс</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

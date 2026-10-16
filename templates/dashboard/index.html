@@ -1,0 +1,34 @@
+{% extends "dashboard/base_dash.html" %}
+{% block title %}Панель администратора{% endblock %}
+{% block dash %}
+<div class="page-head"><h1>Обзор</h1><a class="btn btn-primary" href="{% url 'dashboard:course_create' %}">Создать курс</a></div>
+<div class="stat-row">
+  <div class="stat"><strong>{{ stats.courses }}</strong><span>курсов, опубликовано {{ stats.published }}</span></div>
+  <div class="stat"><strong>{{ stats.users }}</strong><span>обучающихся</span></div>
+  <div class="stat"><strong>{{ stats.enrollments }}</strong><span>записей на курсы</span></div>
+  <div class="stat"><strong>{{ stats.certificates }}</strong><span>выдано сертификатов</span></div>
+</div>
+<div class="two-col" style="grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:24px">
+  <section>
+    <h2>Последние тесты</h2>
+    {% if recent_attempts %}
+    <div class="table-wrap"><table>
+      <thead><tr><th>Пользователь</th><th>Уровень</th><th class="num">Результат</th></tr></thead>
+      <tbody>{% for a in recent_attempts %}
+        <tr><td><a href="{% url 'dashboard:user_detail' a.user.pk %}">{{ a.user.full_name }}</a></td><td>{{ a.level.course.title }}: {{ a.level.title }}</td><td class="num">{% if a.passed %}<span class="badge ok">{{ a.score }}%</span>{% else %}<span class="badge danger">{{ a.score }}%</span>{% endif %}</td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+    {% else %}<p class="muted">Пока никто не сдавал тесты.</p>{% endif %}
+  </section>
+  <section>
+    <h2>Новые пользователи</h2>
+    <div class="panel" style="padding:8px 20px">
+      <ul class="list-plain">
+        {% for u in recent_users %}
+          <li>{% include "partials/avatar.html" %}<div class="grow"><a href="{% url 'dashboard:user_detail' u.pk %}">{{ u.full_name }}</a><div class="small muted">{{ u.date_joined|date:"d.m.Y" }}</div></div>{% if not u.is_active %}<span class="badge danger">заблокирован</span>{% endif %}</li>
+        {% empty %}<li class="muted">Пока никто не зарегистрировался.</li>{% endfor %}
+      </ul>
+    </div>
+  </section>
+</div>
+{% endblock %}

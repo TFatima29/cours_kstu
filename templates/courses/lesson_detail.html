@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ lesson.title }}{% endblock %}
+{% block content %}
+<div class="wrap page" style="padding-top:28px">
+  <div class="lesson-layout">
+    <article>
+      <p class="crumbs"><a href="{{ course.get_absolute_url }}">{{ course.title }}</a> / {{ lesson.level.title }}</p>
+      <h1>{{ lesson.title }}</h1>
+
+      {% csrf_token %}
+      {% if lesson.has_video %}
+        <div class="player" id="lesson-player" data-watched-url="{% url 'courses:lesson_watched' lesson.pk %}" data-watched="{{ watched|yesno:'true,false' }}" data-ratio="0.9">
+          {% if lesson.video_file %}
+            <video controls preload="metadata" playsinline src="{{ lesson.video_file.url }}"></video>
+          {% elif lesson.youtube_id %}
+            <div data-youtube-id="{{ lesson.youtube_id }}"></div>
+          {% else %}
+            <video controls preload="metadata" playsinline src="{{ lesson.video_url }}"></video>
+          {% endif %}
+        </div>
+        {% if state.enrollment %}
+          <div class="watch-status{% if watched %} done{% endif %}" id="watch-status" aria-live="polite">
+            {% if watched %}
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg> Урок просмотрен
+            {% else %}
+              <span data-label>Урок засчитается после просмотра 90% видео.</span>
+              <div class="progress"><span style="width:0"></span></div>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% elif state.enrollment and not watched %}
+        <form method="post" action="{% url 'courses:lesson_watched' lesson.pk %}" class="watch-status">
+          {% csrf_token %}
+          <span>В этом уроке нет видео. Прочитайте материалы и отметьте урок.</span>
+          <button class="btn btn-primary btn-sm" type="submit" style="margin-left:auto">Урок изучен</button>
+        </form>
+      {% elif watched %}
+        <div class="watch-status done">Урок изучен</div>
+      {% endif %}
+
+      {% if level_state.quiz_available and not level_state.quiz_passed %}
+        <div class="next-step">
+          <span><strong>Все уроки уровня просмотрены.</strong> Сдайте тест, чтобы открыть следующий уровень.</span>
+          <a class="btn btn-primary btn-sm" href="{% url 'quizzes:take' lesson.level.pk %}">Пройти тест</a>
+        </div>
+      {% elif state.enrollment.is_completed %}
+        <div class="next-step">
+          <span><strong>Курс пройден.</strong> Сертификат готов.</span>
+          <a class="btn btn-primary btn-sm" href="{% url 'learning:certificate' state.enrollment.certificate.number %}">Открыть сертификат</a>
+        </div>
+      {% endif %}
+
+      {% if lesson.description %}
+        <section style="margin-top:32px">
+          <h2>Описание урока</h2>
+          <div class="prose">{{ lesson.description }}</div>
+        </section>
+      {% endif %}
+
+      {% if materials %}
+        <section style="margin-top:32px">
+          <h2>Материалы</h2>
+          <ul class="materials">
+            {% for m in materials %}
+              <li><a href="{% url 'courses:material_download' m.pk %}"><span class="file-ext">{{ m.extension }}</span><span>{{ m }}</span><span class="small muted" style="margin-left:auto">Скачать</span></a></li>
+            {% endfor %}
+          </ul>
+        </section>
+      {% endif %}
+
+      <nav class="lesson-nav" aria-label="Навигация по урокам">
+        {% if prev_lesson %}<a class="btn btn-secondary" href="{{ prev_lesson.get_absolute_url }}">Предыдущий урок</a>{% else %}<span></span>{% endif %}
+        {% if next_lesson %}<a class="btn btn-secondary" href="{{ next_lesson.get_absolute_url }}">Следующий урок</a>{% endif %}
+      </nav>
+    </article>
+
+    <aside class="panel sticky">
+      {% if state.enrollment %}
+        <div class="progress-row" style="margin-bottom:20px">
+          <div class="progress" aria-label="Прогресс по курсу"><span data-course-percent style="width:{{ state.percent }}%"></span></div>
+          <strong data-course-percent>{{ state.percent }}%</strong>
+        </div>
+      {% endif %}
+      {% include "partials/route.html" with current_lesson=lesson %}
+    </aside>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/lesson.js' %}"></script>{% endblock %}

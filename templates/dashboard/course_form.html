@@ -1,0 +1,55 @@
+{% extends "dashboard/base_dash.html" %}
+{% block title %}{% if course %}{{ course.title }}{% else %}Новый курс{% endif %}{% endblock %}
+{% block dash %}
+<p class="crumbs"><a href="{% url 'dashboard:course_list' %}">Курсы</a></p>
+<div class="page-head">
+  <h1>{% if course %}{{ course.title }}{% else %}Новый курс{% endif %}</h1>
+  {% if course %}<div class="actions">
+    <a class="btn btn-ghost btn-sm" href="{% url 'courses:detail' course.pk %}">Как видят обучающиеся</a>
+    <form method="post" action="{% url 'dashboard:course_publish' course.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button class="btn btn-secondary btn-sm" type="submit">{% if course.is_published %}Скрыть из каталога{% else %}Опубликовать{% endif %}</button></form>
+  </div>{% endif %}
+</div>
+
+<form method="post" enctype="multipart/form-data" class="panel" novalidate>
+  {% csrf_token %}
+  <div class="form-grid">
+    {% include "partials/field.html" with field=form.title full=1 %}
+    {% include "partials/field.html" with field=form.short_description full=1 %}
+    {% include "partials/field.html" with field=form.description full=1 %}
+    {% include "partials/field.html" with field=form.cover %}
+    {% include "partials/field.html" with field=form.is_published %}
+  </div>
+  <div class="actions">
+    <button class="btn btn-primary" type="submit">{% if course %}Сохранить курс{% else %}Создать курс{% endif %}</button>
+    {% if course %}<a class="btn btn-ghost" href="{% url 'dashboard:course_delete' course.pk %}">Удалить курс</a>{% endif %}
+  </div>
+</form>
+
+{% if course %}
+<section class="panel">
+  <h2>Уровни</h2>
+  <p class="muted small">Уровни проходятся по порядку. Каждый завершается тестом; следующий откроется, когда результат не ниже порога.</p>
+  <ul class="list-plain">
+    {% for lv in levels %}
+      <li>
+        <span class="badge">{{ lv.order }}</span>
+        <div class="grow"><a href="{% url 'dashboard:level_edit' lv.pk %}"><strong>{{ lv.title }}</strong></a>
+          <div class="small muted">Уроков: {{ lv.lessons_total }}, вопросов в тесте: {{ lv.questions_total }}, порог {{ lv.pass_threshold }}%</div></div>
+        {% if not lv.questions_total %}<span class="badge mark">нет теста</span>{% endif %}
+        <a class="btn btn-secondary btn-sm" href="{% url 'dashboard:level_edit' lv.pk %}">Открыть</a>
+      </li>
+    {% empty %}<li class="muted">Уровней пока нет — добавьте первый ниже.</li>{% endfor %}
+  </ul>
+  <h3 style="margin-top:24px">Добавить уровень</h3>
+  <form method="post" action="{% url 'dashboard:level_create' course.pk %}" novalidate>
+    {% csrf_token %}
+    <div class="form-grid" style="grid-template-columns:2fr 1fr 1fr">
+      {% include "partials/field.html" with field=level_form.title %}
+      {% include "partials/field.html" with field=level_form.order %}
+      {% include "partials/field.html" with field=level_form.pass_threshold %}
+    </div>
+    <button class="btn btn-primary" type="submit">Добавить уровень</button>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

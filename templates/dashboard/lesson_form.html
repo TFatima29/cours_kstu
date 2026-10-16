@@ -1,0 +1,48 @@
+{% extends "dashboard/base_dash.html" %}
+{% block title %}{% if lesson %}{{ lesson.title }}{% else %}Новый урок{% endif %}{% endblock %}
+{% block dash %}
+<p class="crumbs"><a href="{% url 'dashboard:course_edit' course.pk %}">{{ course.title }}</a> / <a href="{% url 'dashboard:level_edit' level.pk %}">{{ level.title }}</a></p>
+<div class="page-head"><h1>{% if lesson %}{{ lesson.title }}{% else %}Новый урок{% endif %}</h1>
+  {% if lesson %}<a class="btn btn-ghost btn-sm" href="{{ lesson.get_absolute_url }}">Открыть урок</a>{% endif %}</div>
+
+<form method="post" enctype="multipart/form-data" novalidate>
+  {% csrf_token %}
+  <div class="panel">
+    {{ form.non_field_errors }}
+    <div class="form-grid" style="grid-template-columns:3fr 1fr">
+      {% include "partials/field.html" with field=form.title %}
+      {% include "partials/field.html" with field=form.order %}
+      {% include "partials/field.html" with field=form.description full=1 %}
+    </div>
+    <h2>Видео</h2>
+    <p class="small muted">Загрузите файл (mp4, webm, mov, до 500 МБ) или вставьте ссылку на YouTube. Урок засчитывается после просмотра 90% видео.</p>
+    <div class="form-grid">
+      {% include "partials/field.html" with field=form.video_file %}
+      {% include "partials/field.html" with field=form.video_url %}
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Материалы</h2>
+    <p class="small muted">PDF, презентации, документы, аудио, архивы — до 50 МБ каждый.</p>
+    {{ formset.management_form }}
+    {{ formset.non_form_errors }}
+    {% for f in formset %}
+      <div class="formset-row">
+        {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
+        <div class="form-grid" style="margin:0">
+          <div class="field" style="margin:0">{{ f.title.label_tag }} {{ f.title }} {{ f.title.errors }}</div>
+          <div class="field" style="margin:0">{{ f.file.label_tag }} {% if f.instance.pk %}<div class="small"><a href="{{ f.instance.file.url }}">{{ f.instance.filename }}</a></div>{% endif %}{{ f.file }} {{ f.file.errors }}</div>
+        </div>
+        <span></span>
+        {% if f.instance.pk %}<label class="check small">{{ f.DELETE }} Удалить</label>{% else %}<span></span>{% endif %}
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="actions" style="margin-top:20px">
+    <button class="btn btn-primary" type="submit">Сохранить урок</button>
+    {% if lesson %}<a class="btn btn-ghost" href="{% url 'dashboard:lesson_delete' lesson.pk %}">Удалить урок</a>{% endif %}
+  </div>
+</form>
+{% endblock %}

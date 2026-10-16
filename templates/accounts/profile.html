@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Профиль{% endblock %}
+{% block content %}
+<div class="wrap page">
+  <div class="page-head"><h1>Профиль</h1></div>
+  <div class="two-col">
+    <form method="post" enctype="multipart/form-data" class="panel" novalidate>
+      {% csrf_token %}
+      <div style="display:flex;gap:20px;align-items:center;margin-bottom:24px">
+        {% include "partials/avatar.html" with u=user size="lg" %}
+        <div>
+          <div style="font-weight:600;font-size:1.1rem">{{ user.full_name }}</div>
+          <div class="muted">{{ user.email }}</div>
+          <div class="small muted">На платформе с {{ user.date_joined|date:"j E Y" }}</div>
+        </div>
+      </div>
+      {% include "partials/field.html" with field=form.full_name %}
+      <div class="field">
+        <label>E-mail</label>
+        <input type="email" value="{{ user.email }}" disabled>
+        <div class="help">E-mail используется для входа и не меняется.</div>
+      </div>
+      {% include "partials/field.html" with field=form.avatar %}
+      <div class="actions">
+        <button class="btn btn-primary" type="submit">Сохранить</button>
+        {% if user.avatar %}<button class="btn btn-ghost" type="submit" name="remove_avatar" value="1">Удалить аватар</button>{% endif %}
+      </div>
+    </form>
+    <aside class="panel">
+      <h2>Безопасность</h2>
+      <p class="muted">Пароль хранится в зашифрованном виде. Если забудете его, восстановить можно по ссылке на e-mail.</p>
+      <a class="btn btn-secondary" href="{% url 'accounts:password_change' %}">Сменить пароль</a>
+    </aside>
+  </div>
+</div>
+{% endblock %}

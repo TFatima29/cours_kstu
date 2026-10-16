@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Каталог курсов{% endblock %}
+{% block content %}
+<div class="wrap">
+  <section class="catalog-head">
+    <h1>Учитесь шаг за шагом, в своём темпе</h1>
+    <p>Смотрите видеоуроки, сдавайте тест в конце уровня и открывайте следующий. После последнего уровня — сертификат.</p>
+    <form class="search" method="get" role="search">
+      <label class="visually-hidden" for="q">Поиск по названию курса</label>
+      <input type="search" id="q" name="q" value="{{ query }}" placeholder="Найти курс по названию">
+      <button class="btn btn-primary" type="submit">Найти</button>
+    </form>
+  </section>
+
+  <section class="page" style="padding-top:0">
+    {% if query %}<p class="muted">Результаты по запросу «{{ query }}». <a href="{% url 'courses:catalog' %}">Показать все курсы</a></p>{% endif %}
+    {% if courses %}
+      <div class="course-grid">
+        {% for course in courses %}
+          <a class="course-card" href="{{ course.get_absolute_url }}">
+            <div class="cover">{% include "partials/cover.html" %}</div>
+            <div class="body">
+              <h3>{{ course.title }}</h3>
+              <p>{{ course.short_description|default:course.description|truncatechars:140 }}</p>
+              <div class="meta">
+                <span>Уровней: {{ course.levels_total }}</span>
+                <span>Уроков: {{ course.lessons_total }}</span>
+                {% if course.pk in enrolled_ids %}<span class="badge ok">Вы записаны</span>{% endif %}
+              </div>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty">
+        {% if query %}
+          <h2>Ничего не нашлось</h2>
+          <p>Курсов с «{{ query }}» в названии нет. Попробуйте другое слово.</p>
+          <a class="btn btn-secondary" href="{% url 'courses:catalog' %}">Все курсы</a>
+        {% else %}
+          <h2>Курсы скоро появятся</h2>
+          <p>Администратор ещё не опубликовал ни одного курса.</p>
+        {% endif %}
+      </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

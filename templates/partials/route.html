@@ -1,0 +1,52 @@
+{% comment %} Маршрут уровней курса. Параметры: state, current_lesson (необязательно), quiz_level (необязательно) {% endcomment %}
+<ol class="route">
+  {% for ls in state.levels %}
+    <li class="route-level {% if not state.enrollment %}open{% elif ls.unlocked and ls.completed %}done{% elif ls.unlocked %}current{% else %}locked{% endif %}">
+      <span class="station" aria-hidden="true">
+        {% if state.enrollment and not ls.unlocked %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>{% elif state.enrollment and ls.unlocked and ls.completed %}<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M5 12l5 5L20 7"/></svg>{% else %}{{ forloop.counter }}{% endif %}
+      </span>
+      <h3>Уровень {{ forloop.counter }}. {{ ls.level.title }}</h3>
+      <div class="level-meta">
+        {% if state.enrollment %}
+          {% if not ls.unlocked %}Откроется после уровня {{ forloop.counter|add:"-1" }}
+          {% elif ls.completed %}Пройден{% if ls.best_score is not None %}, тест {{ ls.best_score }}%{% endif %}
+          {% else %}Уроков просмотрено: {{ ls.lessons_watched }} из {{ ls.lessons|length }}{% endif %}
+        {% else %}
+          Уроков: {{ ls.lessons|length }}{% if ls.has_quiz %}, тест (порог {{ ls.level.pass_threshold }}%){% endif %}
+        {% endif %}
+      </div>
+      <ul class="stops">
+        {% for item in ls.lessons %}
+          <li>
+            {% if state.enrollment and ls.unlocked or user.is_staff %}
+              <a class="stop{% if item.watched %} watched{% endif %}" href="{{ item.lesson.get_absolute_url }}" {% if current_lesson and current_lesson.pk == item.lesson.pk %}aria-current="page"{% endif %}>
+            {% else %}
+              <span class="stop{% if state.enrollment %} locked{% endif %}">
+            {% endif %}
+                <span class="dot">{% if item.watched %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>{% endif %}</span>
+                <span>{{ item.lesson.title }}</span>
+                {% if item.watched %}<span class="visually-hidden">(просмотрен)</span>{% endif %}
+            {% if state.enrollment and ls.unlocked or user.is_staff %}</a>{% else %}</span>{% endif %}
+          </li>
+        {% endfor %}
+        {% if ls.has_quiz %}
+          <li>
+            {% if ls.quiz_available %}
+              <a class="stop quiz{% if ls.quiz_passed %} passed{% else %} ready{% endif %}" href="{% url 'quizzes:take' ls.level.pk %}" {% if quiz_level and quiz_level.pk == ls.level.pk %}aria-current="page"{% endif %}>
+                <span class="dot"></span><span>Тест уровня</span>
+                <span class="stop-side">{% if ls.quiz_passed %}сдан, {{ ls.best_score }}%{% elif ls.best_score is not None %}лучший {{ ls.best_score }}%{% else %}готов к сдаче{% endif %}</span>
+              </a>
+            {% else %}
+              <span class="stop quiz{% if state.enrollment %} locked{% endif %}">
+                <span class="dot"></span><span>Тест уровня</span>
+                {% if state.enrollment and ls.unlocked %}<span class="stop-side">после всех уроков</span>{% endif %}
+              </span>
+            {% endif %}
+          </li>
+        {% endif %}
+      </ul>
+    </li>
+  {% empty %}
+    <li class="muted">В курсе пока нет уровней.</li>
+  {% endfor %}
+</ol>

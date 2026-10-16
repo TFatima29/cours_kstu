@@ -1,0 +1,86 @@
+{% load static %}<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Course Platform{% endblock %} — Course Platform</title>
+  <script>
+    try { var t = localStorage.getItem("cp-theme"); if (t) document.documentElement.setAttribute("data-theme", t); } catch (e) {}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <a class="visually-hidden" href="#content">Перейти к содержимому</a>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="{% url 'courses:catalog' %}">
+        <svg class="brand-mark" viewBox="0 0 28 28" aria-hidden="true">
+          <path d="M5 23 L14 14 L23 5" stroke="var(--route)" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+          <circle cx="5" cy="23" r="4" fill="var(--route)"/>
+          <circle cx="14" cy="14" r="4" fill="var(--route)"/>
+          <circle cx="23" cy="5" r="4.5" fill="var(--marker)"/>
+        </svg>
+        <span class="brand-text">Course Platform</span>
+      </a>
+      {% with url=request.resolver_match.url_name ns=request.resolver_match.namespace %}
+      <nav class="nav" id="main-nav" aria-label="Основное меню">
+        <a href="{% url 'courses:catalog' %}" {% if ns == 'courses' and url == 'catalog' %}aria-current="page"{% endif %}>Каталог</a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'learning:my_courses' %}" {% if url == 'my_courses' %}aria-current="page"{% endif %}>Мои курсы</a>
+          <a href="{% url 'learning:progress' %}" {% if url == 'progress' %}aria-current="page"{% endif %}>Мой прогресс</a>
+          {% if user.is_staff %}<a href="{% url 'dashboard:index' %}" {% if ns == 'dashboard' %}aria-current="page"{% endif %}>Панель администратора</a>{% endif %}
+        {% else %}
+          <a class="mobile-only" href="{% url 'accounts:login' %}">Войти</a>
+        {% endif %}
+      </nav>
+      {% endwith %}
+      <div class="topbar-right">
+        <button class="icon-btn" id="theme-toggle" type="button" aria-label="Сменить тему">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        </button>
+        {% if user.is_authenticated %}
+          <details class="user-menu">
+            <summary aria-label="Меню профиля">
+              {% include "partials/avatar.html" with u=user %}
+              <span class="user-name">{{ user.get_short_name }}</span>
+            </summary>
+            <div class="menu">
+              <div class="small muted" style="padding:8px 12px">{{ user.email }}</div>
+              <a href="{% url 'accounts:profile' %}">Профиль</a>
+              <a href="{% url 'accounts:password_change' %}">Сменить пароль</a>
+              <hr>
+              <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button type="submit">Выйти</button></form>
+            </div>
+          </details>
+        {% else %}
+          <a class="btn btn-ghost btn-sm guest-login" href="{% url 'accounts:login' %}">Войти</a>
+          <a class="btn btn-primary btn-sm" href="{% url 'accounts:register' %}">Регистрация</a>
+        {% endif %}
+        <button class="icon-btn menu-toggle" id="menu-toggle" type="button" aria-label="Меню" aria-expanded="false" aria-controls="main-nav">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="content">
+    {% if messages %}
+      <div class="wrap"><div class="flash-list" role="status">
+        {% for message in messages %}<div class="flash {{ message.tags }}">{{ message }}</div>{% endfor %}
+      </div></div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">Course Platform — платформа онлайн-обучения. КГТУ им. И. Раззакова, 2026.</div>
+  </footer>
+  <script src="{% static 'js/app.js' %}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

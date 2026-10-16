@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Сертификат{% endblock %}
+{% block content %}
+<div class="wrap page">
+  <article class="cert">
+    <p class="muted">Course Platform</p>
+    <h1>Сертификат о прохождении курса</h1>
+    <p style="margin-top:28px">Настоящим подтверждается, что</p>
+    <div class="who">{{ cert.enrollment.user.full_name }}</div>
+    <p>успешно прошёл(а) все уровни и итоговые тесты курса</p>
+    <h2 style="font-size:clamp(1.2rem,1rem + 1.2vw,1.8rem)">«{{ cert.enrollment.course.title }}»</h2>
+    <div class="cert-foot">
+      <span>Дата выдачи: {{ cert.issued_at|date:"j E Y" }}</span>
+      <span>№ {{ cert.short_number }}</span>
+    </div>
+  </article>
+  <div class="actions no-print" style="justify-content:center;margin-top:24px">
+    <button class="btn btn-primary" type="button" onclick="window.print()">Распечатать или сохранить в PDF</button>
+    {% if user == cert.enrollment.user %}<a class="btn btn-secondary" href="{% url 'learning:progress' %}">Мой прогресс</a>{% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Тест: {{ level.title }}{% endblock %}
+{% block content %}
+<div class="wrap page">
+  <form method="post" class="quiz" novalidate>
+    {% csrf_token %}
+    <p class="crumbs"><a href="{{ course.get_absolute_url }}">{{ course.title }}</a> / {{ level.title }}</p>
+    <h1>Тест уровня «{{ level.title }}»</h1>
+    <p class="muted">Вопросов: {{ questions|length }}. Чтобы сдать, нужно не меньше {{ level.pass_threshold }}% правильных ответов. Если не получится — можно пересдать.</p>
+
+    {% for q in questions %}
+      <fieldset class="question{% if errors and q.id not in selected %} missing{% endif %}">
+        <legend><span class="num">{{ forloop.counter }}.</span><span>{{ q.text|linebreaksbr }}</span></legend>
+        {% for c in q.choices %}
+          <label class="option">
+            <input type="radio" name="q{{ q.id }}" value="{{ c.id }}" required {% for qid, cid in selected.items %}{% if qid == q.id and cid == c.id %}checked{% endif %}{% endfor %}>
+            <span>{{ c.text }}</span>
+          </label>
+        {% endfor %}
+      </fieldset>
+    {% endfor %}
+
+    <div class="quiz-bar">
+      <span class="small muted" id="answered">Отвечено: 0 из {{ questions|length }}</span>
+      <button class="btn btn-primary" type="submit">Отправить ответы</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  (function () {
+    var form = document.querySelector(".quiz"), out = document.getElementById("answered");
+    var total = form.querySelectorAll("fieldset.question").length;
+    function update() { out.textContent = "Отвечено: " + form.querySelectorAll("input[type=radio]:checked").length + " из " + total; }
+    form.addEventListener("change", update); update();
+  })();
+</script>
+{% endblock %}

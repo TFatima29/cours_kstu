@@ -1,0 +1,36 @@
+{% extends "dashboard/base_dash.html" %}
+{% block title %}Вопрос теста{% endblock %}
+{% block dash %}
+<p class="crumbs"><a href="{% url 'dashboard:course_edit' course.pk %}">{{ course.title }}</a> / <a href="{% url 'dashboard:level_edit' level.pk %}">{{ level.title }}</a></p>
+<div class="page-head"><h1>{% if question %}Изменить вопрос{% else %}Новый вопрос{% endif %}</h1></div>
+<form method="post" class="panel" novalidate>
+  {% csrf_token %}
+  <div class="form-grid" style="grid-template-columns:4fr 1fr">
+    {% include "partials/field.html" with field=form.text %}
+    {% include "partials/field.html" with field=form.order %}
+  </div>
+  <h2>Варианты ответа</h2>
+  <p class="small muted">Заполните от двух вариантов и отметьте ровно один правильный. Пустые строки не сохраняются.</p>
+  {{ formset.management_form }}
+  {% if formset.non_form_errors %}<div class="flash error" style="margin-bottom:12px">{% for e in formset.non_form_errors %}{{ e }}{% endfor %}</div>{% endif %}
+  {% for f in formset %}
+    <div class="formset-row">
+      {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
+      <div><label class="visually-hidden" for="{{ f.text.id_for_label }}">Вариант {{ forloop.counter }}</label>{{ f.text }}{{ f.text.errors }}</div>
+      <label class="check small">{{ f.is_correct }} Правильный</label>
+      {% if f.instance.pk %}<label class="check small">{{ f.DELETE }} Удалить</label>{% else %}<span></span>{% endif %}
+    </div>
+  {% endfor %}
+  <div class="actions" style="margin-top:20px">
+    <button class="btn btn-primary" type="submit">Сохранить вопрос</button>
+    <button class="btn btn-secondary" type="submit" name="add_another" value="1">Сохранить и добавить ещё</button>
+    <a class="btn btn-ghost" href="{% url 'dashboard:level_edit' level.pk %}">Отмена</a>
+  </div>
+</form>
+<script>
+  // Отметка «правильный» работает как переключатель: один вариант на вопрос
+  document.querySelectorAll('input[name$="-is_correct"]').forEach(function (box, _, all) {
+    box.addEventListener("change", function () { if (box.checked) all.forEach(function (o) { if (o !== box) o.checked = false; }); });
+  });
+</script>
+{% endblock %}

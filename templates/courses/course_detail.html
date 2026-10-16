@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}{{ course.title }}{% endblock %}
+{% block content %}
+<div class="wrap">
+  <section class="course-hero">
+    <div>
+      <p class="crumbs"><a href="{% url 'courses:catalog' %}">Каталог</a></p>
+      <h1>{{ course.title }}</h1>
+      {% if not course.is_published %}<p><span class="badge danger">Черновик — виден только администраторам</span></p>{% endif %}
+      {% if course.short_description %}<p class="lead">{{ course.short_description }}</p>{% endif %}
+      <div class="course-stats">
+        <div><strong>{{ state.levels|length }}</strong><span>уровни</span></div>
+        <div><strong>{{ course.lessons_count }}</strong><span>уроки</span></div>
+        <div><strong>{% if state.enrollment %}{{ state.percent }}%{% else %}0 сом{% endif %}</strong><span>{% if state.enrollment %}пройдено{% else %}бесплатно{% endif %}</span></div>
+      </div>
+
+      {% if state.enrollment %}
+        <div class="progress-row" style="max-width:420px;margin-bottom:20px">
+          <div class="progress" role="progressbar" aria-valuenow="{{ state.percent }}" aria-valuemin="0" aria-valuemax="100" aria-label="Прогресс по курсу"><span style="width:{{ state.percent }}%"></span></div>
+          <strong>{{ state.percent }}%</strong>
+        </div>
+        <div class="actions">
+          {% if state.enrollment.is_completed %}
+            <span class="badge ok">Курс пройден {{ state.enrollment.completed_at|date:"j E Y" }}</span>
+            <a class="btn btn-primary" href="{% url 'learning:certificate' state.enrollment.certificate.number %}">Открыть сертификат</a>
+          {% elif state.pending_quiz_level %}
+            <a class="btn btn-primary" href="{% url 'quizzes:take' state.pending_quiz_level.pk %}">Пройти тест: {{ state.pending_quiz_level.title }}</a>
+          {% elif state.next_lesson %}
+            <a class="btn btn-primary" href="{{ state.next_lesson.get_absolute_url }}">{% if state.percent %}Продолжить обучение{% else %}Начать первый урок{% endif %}</a>
+          {% endif %}
+        </div>
+      {% elif user.is_authenticated %}
+        {% if course.is_published %}
+        <form method="post" action="{% url 'courses:enroll' course.pk %}">
+          {% csrf_token %}
+          <button class="btn btn-primary" type="submit">Записаться на курс</button>
+        </form>
+        {% endif %}
+      {% else %}
+        <div class="actions">
+          <a class="btn btn-primary" href="{% url 'accounts:register' %}">Зарегистрироваться и записаться</a>
+          <a class="btn btn-ghost" href="{% url 'accounts:login' %}?next={{ request.path }}">У меня есть аккаунт</a>
+        </div>
+      {% endif %}
+    </div>
+    <div class="cover">{% include "partials/cover.html" %}</div>
+  </section>
+
+  <div class="two-col page" style="padding-top:8px">
+    <section>
+      <h2>О курсе</h2>
+      <div class="prose">{{ course.description|default:"Описание курса появится позже." }}</div>
+      <h2 style="margin-top:32px">Как проходит обучение</h2>
+      <div class="prose">Уровни открываются по порядку. Чтобы перейти на следующий, посмотрите все уроки уровня и сдайте тест. Урок засчитывается, когда вы посмотрели не меньше 90% видео. Тест можно пересдавать сколько угодно раз.</div>
+    </section>
+    <aside class="panel sticky">
+      <h2>Программа</h2>
+      {% include "partials/route.html" %}
+    </aside>
+  </div>
+</div>
+{% endblock %}

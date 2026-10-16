@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Результат теста{% endblock %}
+{% block content %}
+<div class="wrap page">
+  <div class="result panel {% if attempt.passed %}pass{% else %}fail{% endif %}">
+    <p class="crumbs"><a href="{{ course.get_absolute_url }}">{{ course.title }}</a> / {{ level.title }}</p>
+    <h1>{% if course_completed %}Курс пройден!{% elif attempt.passed %}Тест сдан{% else %}Тест не сдан{% endif %}</h1>
+    <div class="score">{{ attempt.score }}%</div>
+    <p>Правильных ответов: {{ attempt.correct }} из {{ attempt.total }}. Порог — {{ level.pass_threshold }}%.</p>
+
+    {% if course_completed %}
+      <p>Вы прошли все уровни курса «{{ course.title }}». Сертификат уже выдан.</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="{% url 'learning:certificate' state.enrollment.certificate.number %}">Открыть сертификат</a>
+        <a class="btn btn-secondary" href="{% url 'learning:progress' %}">Мой прогресс</a>
+      </div>
+    {% elif attempt.passed %}
+      {% if next_level_state %}
+        <p>Открыт следующий уровень: <strong>{{ next_level_state.level.title }}</strong>.</p>
+        <div class="actions">
+          {% with first=next_level_state.lessons.0 %}
+            {% if first %}<a class="btn btn-primary" href="{{ first.lesson.get_absolute_url }}">Перейти к уровню</a>{% endif %}
+          {% endwith %}
+          <a class="btn btn-secondary" href="{{ course.get_absolute_url }}">К программе курса</a>
+        </div>
+      {% else %}
+        <div class="actions"><a class="btn btn-primary" href="{{ course.get_absolute_url }}">К программе курса</a></div>
+      {% endif %}
+    {% else %}
+      <p>Пересмотрите уроки уровня и попробуйте ещё раз — количество попыток не ограничено.</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="{% url 'quizzes:take' level.pk %}">Пройти тест заново</a>
+        <a class="btn btn-secondary" href="{{ course.get_absolute_url }}">К урокам</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
