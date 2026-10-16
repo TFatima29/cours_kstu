@@ -1,0 +1,24 @@
+<div class="comment{% if c.is_hidden %} hidden-by-admin{% endif %}" id="comment-{{ c.pk }}">
+  {% include "partials/avatar.html" with u=c.user %}
+  <div>
+    <div><span class="who">{{ c.user.full_name }}</span>{% if c.user.is_staff %} <span class="badge mark">администратор</span>{% endif %}<span class="when">{{ c.created_at|date:"j E, H:i" }}</span>{% if c.is_hidden %} <span class="badge danger">скрыт</span>{% endif %}</div>
+    <div class="text">{{ c.text }}</div>
+    <div class="comment-actions">
+      {% if can_comment and not reply %}
+        <details><summary>Ответить</summary>
+          <form method="post" action="{% url 'community:add_comment' lesson.pk %}" class="comment-form" style="margin-top:8px">
+            {% csrf_token %}<input type="hidden" name="parent" value="{{ c.pk }}">
+            <label class="visually-hidden" for="reply-{{ c.pk }}">Ответ</label>
+            <textarea id="reply-{{ c.pk }}" name="text" maxlength="2000" required placeholder="Ваш ответ"></textarea>
+            <button class="btn btn-primary btn-sm" type="submit" style="margin-top:8px">Ответить</button>
+          </form>
+        </details>
+      {% endif %}
+      {% if c.user == user %}
+        <form method="post" action="{% url 'community:delete_comment' c.pk %}" data-confirm="Удалить комментарий?">{% csrf_token %}<button type="submit">Удалить</button></form>
+      {% elif user.is_staff %}
+        <form method="post" action="{% url 'community:delete_comment' c.pk %}">{% csrf_token %}<button type="submit">{% if c.is_hidden %}Показать{% else %}Скрыть{% endif %}</button></form>
+      {% endif %}
+    </div>
+  </div>
+</div>

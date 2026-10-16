@@ -1,0 +1,17 @@
+<div class="course-grid">
+  {% for course in courses %}
+    <a class="course-card" href="{{ course.get_absolute_url }}">
+      <div class="cover">{% include "partials/cover.html" %}</div>
+      <div class="body">
+        <h3>{{ course.title }}</h3>
+        <p>{{ course.short_description|default:course.description|truncatechars:140 }}</p>
+        <div class="meta">
+          <span>{{ course.get_difficulty_display }}</span>
+          <span>Уровней: {{ course.levels_total }}</span>
+          <span>Уроков: {{ course.lessons_total }}</span>
+          {% if course.pk in enrolled_ids %}<span class="badge ok">Вы записаны</span>{% endif %}
+        </div>
+      </div>
+    </a>
+  {% endfor %}
+</div>

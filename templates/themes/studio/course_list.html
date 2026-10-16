@@ -1,0 +1,14 @@
+<ol class="reel" id="reel">
+  {% for course in courses %}
+    {% widthratio course.pk 1 67 as hue_raw %}
+    <li>
+      <a href="{{ course.get_absolute_url }}" data-hue="{{ hue_raw }}" style="--hue: hsl({{ hue_raw }} 90% 62%)">
+        <h3>{{ course.title }}</h3>
+        <span class="meta">{{ course.get_difficulty_display }}<br>{{ course.levels_total }} ур., {{ course.lessons_total }} видео{% if course.pk in enrolled_ids %}<br><span class="mine">вы учитесь</span>{% endif %}</span>
+        <p class="desc">{{ course.short_description|default:course.description|truncatechars:160 }}</p>
+        <template>{% include "partials/cover.html" %}</template>
+      </a>
+    </li>
+  {% endfor %}
+</ol>
+<div class="reel-preview" id="reel-preview" aria-hidden="true"></div>

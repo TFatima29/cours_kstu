@@ -1,0 +1,32 @@
+{% load static %}
+<section class="track-hero" aria-labelledby="track-title">
+  <div class="wrap">
+    <h1 id="track-title">Твой темп. Твоя трасса.</h1>
+  </div>
+  <div class="wrap grid">
+    <div>
+      <p class="lede">Каждый курс — круг. Уровни — секторы, уроки — повороты. Сдал тест — открыл следующий сектор, прошёл все — получил сертификат.</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="#courses">На старт</a>
+        {% if not user.is_authenticated %}<a class="btn btn-secondary" href="{% url 'accounts:register' %}">Регистрация</a>{% endif %}
+      </div>
+    </div>
+    <div class="circuit-box" id="circuit">
+      <div class="circuit-pick" role="group" aria-label="Выберите курс, чтобы увидеть его трассу">
+        {% for c in hero_courses|slice:":5" %}<button type="button" data-i="{{ forloop.counter0 }}" {% if forloop.first %}aria-pressed="true"{% else %}aria-pressed="false"{% endif %}>{{ c.title }}</button>{% endfor %}
+      </div>
+      <svg id="circuit-svg" viewBox="0 0 600 330" role="img" aria-label="Схема курса в виде трассы"></svg>
+      <div class="circuit-legend" aria-live="polite">
+        <span><strong id="c-levels">0</strong><span id="c-levels-w">уровней</span></span>
+        <span><strong id="c-lessons">0</strong><span id="c-lessons-w">уроков</span></span>
+        <a id="c-link" href="#courses">Открыть курс</a>
+      </div>
+    </div>
+  </div>
+  {% if hero_courses %}
+  <div class="marquee" aria-hidden="true"><div class="marquee-track">
+    {% for c in hero_courses %}<span>{{ c.title }}</span>{% endfor %}{% for c in hero_courses %}<span>{{ c.title }}</span>{% endfor %}
+  </div></div>
+  {% endif %}
+  {{ hero_courses|json_script:"hero-courses" }}
+</section>

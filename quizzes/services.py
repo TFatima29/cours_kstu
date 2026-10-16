@@ -24,5 +24,22 @@ def grade_attempt(user, level, answers):
         score=score,
         passed=score >= level.pass_threshold,
     )
+    if attempt.passed and not QuizAttempt.objects.filter(user=user, level=level, passed=True).exclude(pk=attempt.pk).exists():
+        _notify_next_level(user, level)
     course_completed = attempt.passed and complete_course_if_done(user, level.course)
     return attempt, course_completed
+
+
+def _notify_next_level(user, level):
+    from community.models import Notification, notify
+    from learning.services import build_course_state
+
+    state = build_course_state(user, level.course)
+    found = False
+    for item in state.levels:
+        if found:
+            if item.unlocked:
+                first = item.lessons[0].lesson.get_absolute_url() if item.lessons else level.course.get_absolute_url()
+                notify(user, Notification.Kind.LEVEL_UNLOCKED, f"Открыт уровень «{item.level.title}» курса «{level.course.title}»", first)
+            return
+        found = item.level.pk == level.pk

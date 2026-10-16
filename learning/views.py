@@ -34,3 +34,17 @@ def certificate(request, number):
     """Ф-12. Сертификат о прохождении курса (страница для печати / PDF). Доступен по номеру для проверки."""
     cert = get_object_or_404(Certificate.objects.select_related("enrollment__user", "enrollment__course"), number=number)
     return render(request, "learning/certificate.html", {"cert": cert})
+
+
+def verify_certificate(request):
+    """Проверка подлинности сертификата по номеру (полному или короткому)."""
+    number = request.GET.get("number", "").strip().lower()
+    cert = None
+    checked = bool(number)
+    if number:
+        qs = Certificate.objects.select_related("enrollment__user", "enrollment__course")
+        if len(number) == 36:
+            cert = qs.filter(number=number).first()
+        elif len(number) == 8:
+            cert = next((c for c in qs if str(c.number).startswith(number)), None)
+    return render(request, "learning/verify.html", {"cert": cert, "checked": checked, "number": number})

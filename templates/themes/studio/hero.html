@@ -1,0 +1,14 @@
+{% load static %}
+<div class="studio-bg" aria-hidden="true"><div class="fallback"></div><canvas id="studio-canvas"></canvas></div>
+<section class="wrap studio-hero" aria-labelledby="studio-title">
+  <h1 id="studio-title">Курсы, в которые хочется войти</h1>
+  <div class="row">
+    <p class="lede">Видеоуроки, тест после каждого уровня и сертификат в финале. Наведите на название курса ниже — фон окрасится в его цвет.</p>
+    <div class="actions">
+      <a class="btn btn-primary" href="#courses">Смотреть курсы</a>
+      {% if not user.is_authenticated %}<a class="btn btn-secondary" href="{% url 'accounts:register' %}">Регистрация</a>{% endif %}
+    </div>
+    <p class="count"><strong>{{ stats.courses }}</strong>курсов, {{ stats.lessons }} видеоуроков</p>
+  </div>
+</section>
+<script src="{% static 'js/themes/studio.js' %}" defer></script>

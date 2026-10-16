@@ -1,0 +1,113 @@
+/* Вариант «Трасса» — по мотивам landonorris.com.
+   Идея: курс — гоночная трасса. Уровни — секторы, уроки — повороты.
+   Светлый асфальт, чёрный текст, лаймовый акцент, крупная спортивная типографика. */
+
+:root[data-variant="track"] {
+  --paper: #eceee8;
+  --surface: #f8f9f5;
+  --surface-2: #e1e4dc;
+  --ink: #111214;
+  --ink-2: #3b3f45;
+  --ink-3: #6c7178;
+  --line: #cfd3ca;
+  --route: #111214;
+  --route-soft: #dfe3d6;
+  --marker: #c8f000;
+  --marker-ink: #111214;
+  --lime: #c8f000;
+  --danger: #d4321f;
+  --danger-soft: #f6dcd6;
+  --ok-soft: #e4f4b0;
+  --focus: #111214;
+  --font-display: "Tektur", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "Golos Text", "Segoe UI", system-ui, sans-serif;
+  --r-sm: 0;
+  --r-md: 0;
+  --r-lg: 0;
+  --shadow: 0 10px 30px rgba(17, 18, 20, 0.12);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-variant="track"]:not([data-theme="light"]) {
+    --paper: #16181b; --surface: #1e2125; --surface-2: #272b30; --ink: #f1f3ee; --ink-2: #c3c8c0; --ink-3: #8b9189;
+    --line: #33383e; --route: #f1f3ee; --route-soft: #2a2f22; --ok-soft: #2b3410; --danger-soft: #3a1c18; --focus: #c8f000;
+    color-scheme: dark;
+  }
+}
+:root[data-variant="track"][data-theme="dark"] {
+  --paper: #16181b; --surface: #1e2125; --surface-2: #272b30; --ink: #f1f3ee; --ink-2: #c3c8c0; --ink-3: #8b9189;
+  --line: #33383e; --route: #f1f3ee; --route-soft: #2a2f22; --ok-soft: #2b3410; --danger-soft: #3a1c18; --focus: #c8f000;
+  color-scheme: dark;
+}
+
+[data-variant="track"] h1, [data-variant="track"] h2 { font-weight: 800; letter-spacing: -0.02em; text-transform: none; }
+[data-variant="track"] h3 { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.01em; }
+[data-variant="track"] .topbar { background: var(--paper); border-bottom: 0; }
+[data-variant="track"] .brand { font-weight: 800; font-size: 1.05rem; }
+[data-variant="track"] .nav a { font-weight: 600; }
+[data-variant="track"] .nav a[aria-current="page"] { background: var(--ink); color: var(--paper); }
+[data-variant="track"] .btn { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.01em; min-height: 48px; padding: 12px 24px; }
+[data-variant="track"] .btn-primary { background: var(--ink); color: var(--lime); }
+[data-variant="track"] .btn-primary:hover { background: var(--lime); color: #111214; }
+[data-variant="track"] .btn-secondary { border: 2px solid var(--ink); background: transparent; }
+[data-variant="track"] .btn-sm { min-height: 36px; padding: 6px 14px; }
+[data-variant="track"] .panel, [data-variant="track"] .stat, [data-variant="track"] .table-wrap, [data-variant="track"] .my-course, [data-variant="track"] .empty { border: 0; }
+[data-variant="track"] .progress { height: 10px; border-radius: 0; background: var(--surface-2); }
+[data-variant="track"] .progress > span { border-radius: 0; background: var(--ink); background-image: repeating-linear-gradient(90deg, var(--ink) 0 14px, var(--lime) 14px 16px); }
+[data-variant="track"] .route-level::before { width: 6px; left: 12px; background: repeating-linear-gradient(180deg, var(--line) 0 8px, transparent 8px 14px); }
+[data-variant="track"] .route-level.done::before { background: var(--ink); }
+[data-variant="track"] .station { border: 0; width: 32px; height: 32px; left: -1px; top: -1px; border-radius: 0; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); background: var(--surface-2); font-family: var(--font-display); }
+[data-variant="track"] .route-level.current .station { background: var(--lime); border-color: var(--lime); color: #111214; box-shadow: none; }
+[data-variant="track"] .route-level.done .station { background: var(--ink); border-color: var(--ink); color: var(--lime); }
+[data-variant="track"] .stop.quiz.ready { background: var(--lime); color: #111214; }
+[data-variant="track"] .chip { border-radius: 0; border-width: 2px; border-color: var(--ink); background: transparent; color: var(--ink); font-weight: 600; }
+[data-variant="track"] .chip[aria-current="true"] { background: var(--ink); color: var(--lime); }
+[data-variant="track"] .score { font-family: var(--font-display); font-weight: 800; }
+[data-variant="track"] .result.pass .score { color: var(--ink); text-decoration: underline 0.12em var(--lime); text-underline-offset: 0.12em; }
+[data-variant="track"] .badge { border-radius: 0; }
+[data-variant="track"] .badge.ok { background: var(--lime); color: #111214; }
+[data-variant="track"] .variant-switch button { border-radius: 0; }
+[data-variant="track"] .footer { background: var(--ink); color: #b8bdb4; border-top: 0; }
+[data-variant="track"] .footer a { color: var(--lime); }
+[data-variant="track"] .footer .variant-switch button { background: transparent; color: #e6e9e1; border-color: #3b3f45; }
+[data-variant="track"] .footer .variant-switch button[aria-pressed="true"] { background: var(--lime); color: #111214; border-color: var(--lime); }
+
+/* ---------- Герой ---------- */
+.track-hero { padding: 32px 0 0; overflow: hidden; }
+.track-hero .grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 32px; align-items: center; }
+.track-hero h1 { font-size: clamp(2.8rem, 0.8rem + 7.4vw, 8.4rem); line-height: 0.92; letter-spacing: -0.045em; margin: 0 0 28px; }
+.track-hero .grid { align-items: start; }
+[data-variant="track"] .catalog-body { padding-top: 56px; }
+.track-hero .lede { font-size: 1.15rem; max-width: 36ch; color: var(--ink-2); margin-bottom: 24px; }
+.circuit-box { position: relative; background: var(--surface); padding: 20px 20px 16px; }
+.circuit-box svg { width: 100%; height: auto; display: block; overflow: visible; }
+.circuit-pick { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.circuit-pick button { font: 600 0.82rem var(--font-body); border: 2px solid var(--ink); background: transparent; color: var(--ink); padding: 6px 10px; cursor: pointer; }
+.circuit-pick button[aria-pressed="true"] { background: var(--ink); color: var(--lime); }
+.circuit-legend { display: flex; flex-wrap: wrap; gap: 6px 20px; justify-content: space-between; align-items: baseline; margin-top: 10px; font-size: 0.9rem; color: var(--ink-2); }
+.circuit-legend strong { font: 800 1.6rem var(--font-display); color: var(--ink); margin-right: 6px; }
+.circuit-legend a { font-weight: 700; color: var(--ink); }
+.circuit-sector-label { font: 700 13px var(--font-display); fill: var(--ink); }
+.marquee { margin-top: 40px; background: var(--lime); color: #111214; overflow: hidden; white-space: nowrap; padding: 14px 0; }
+.marquee-track { display: inline-flex; gap: 48px; animation: track-marquee 38s linear infinite; font: 800 clamp(1.4rem, 1rem + 1.6vw, 2.4rem) var(--font-display); letter-spacing: -0.02em; }
+.marquee-track span::after { content: "/"; margin-left: 48px; opacity: 0.35; }
+@keyframes track-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .marquee-track { animation: none; } }
+@media (max-width: 900px) { .track-hero .grid { grid-template-columns: 1fr; } }
+
+/* ---------- Каталог: решётка болидов ---------- */
+.track-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.track-item { display: grid; grid-template-rows: auto 1fr; background: var(--surface); color: var(--ink); text-decoration: none; transition: transform 0.2s cubic-bezier(.2,.7,.2,1); }
+.track-item:hover { transform: translateY(-4px); }
+.track-item .cover { aspect-ratio: 16 / 9; background: var(--surface-2); overflow: hidden; }
+.track-item .cover img, .track-item .cover svg { width: 100%; height: 100%; object-fit: cover; display: block; }
+.track-item .body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 8px; }
+.track-item h3 { font-size: 1.45rem; margin: 0; line-height: 1.1; }
+.track-item p { color: var(--ink-2); font-size: 0.95rem; margin: 0; flex: 1; }
+.track-item .facts { display: flex; gap: 18px; font-size: 0.85rem; color: var(--ink-3); }
+.track-item .facts b { font: 800 1.15rem var(--font-display); color: var(--ink); margin-left: 4px; }
+.track-item .enrolled { align-self: flex-start; background: var(--lime); color: #111214; font-weight: 700; font-size: 0.8rem; padding: 2px 8px; }
+.track-item:hover .cover { background: var(--lime); }
+.mini-circuit path.road { fill: none; stroke: var(--ink); stroke-width: 7; stroke-linejoin: round; }
+.mini-circuit path.kerb { fill: none; stroke: var(--lime); stroke-width: 7; stroke-dasharray: 6 6; }
+@media (prefers-reduced-motion: reduce) { .track-item, .track-item:hover { transition: none; transform: none; } }

@@ -1,0 +1,98 @@
+/* Вариант «Лёд» — по мотивам igloo.inc.
+   Идея: каждый курс — ледяной кристалл. Чем больше уроков, тем крупнее кристалл.
+   Тёмная «полярная ночь», холодный свет, полупрозрачный лёд. */
+
+:root[data-variant="ice"] {
+  --paper: #060a12;
+  --surface: #0c1422;
+  --surface-2: #132036;
+  --ink: #e9f3fb;
+  --ink-2: #a9bfd4;
+  --ink-3: #6f87a0;
+  --line: #1d2d45;
+  --route: #8fdcff;
+  --route-soft: #10283d;
+  --marker: #e6fbff;
+  --marker-ink: #04121c;
+  --danger: #ff8a8a;
+  --danger-soft: #2c1418;
+  --ok-soft: #0f2a33;
+  --focus: #b8ecff;
+  --font-display: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-hud: "IBM Plex Mono", ui-monospace, monospace;
+  --r-sm: 2px;
+  --r-md: 4px;
+  --r-lg: 6px;
+  --shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+
+[data-variant="ice"] body { font-weight: 400; letter-spacing: 0.005em; }
+[data-variant="ice"] h1, [data-variant="ice"] h2, [data-variant="ice"] h3 { font-weight: 300; letter-spacing: -0.03em; }
+[data-variant="ice"] h3 { font-weight: 500; letter-spacing: -0.01em; }
+[data-variant="ice"] .topbar { background: rgba(6, 10, 18, 0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom-color: rgba(143, 220, 255, 0.12); }
+[data-variant="ice"] .brand { font-family: var(--font-hud); font-weight: 500; font-size: 0.9rem; letter-spacing: 0.02em; }
+[data-variant="ice"] .panel, [data-variant="ice"] .stat, [data-variant="ice"] .table-wrap, [data-variant="ice"] .course-card, [data-variant="ice"] .my-course, [data-variant="ice"] .empty, [data-variant="ice"] .cert {
+  background: rgba(16, 30, 52, 0.55);
+  border-color: rgba(143, 220, 255, 0.14);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+[data-variant="ice"] .btn-primary { background: var(--ink); color: #04121c; border-radius: 2px; }
+[data-variant="ice"] .btn-primary:hover { background: var(--route); }
+[data-variant="ice"] .btn-secondary { background: transparent; border-color: rgba(143, 220, 255, 0.35); }
+[data-variant="ice"] .btn { letter-spacing: 0.02em; }
+[data-variant="ice"] .progress > span { background: var(--route); box-shadow: 0 0 12px rgba(143, 220, 255, 0.6); }
+[data-variant="ice"] .route-level.current .station { background: var(--marker); border-color: var(--marker); box-shadow: 0 0 0 6px rgba(184, 236, 255, 0.15), 0 0 24px rgba(184, 236, 255, 0.55); }
+[data-variant="ice"] .route-level.done .station { color: #04121c; }
+[data-variant="ice"] .stop.quiz.ready { color: var(--marker); background: rgba(143, 220, 255, 0.12); }
+[data-variant="ice"] .score, [data-variant="ice"] .stat strong, [data-variant="ice"] .course-stats strong, [data-variant="ice"] .progress-row strong { font-family: var(--font-hud); font-weight: 400; }
+[data-variant="ice"] .chip[aria-current="true"] { background: var(--ink); color: #04121c; border-color: var(--ink); }
+[data-variant="ice"] .footer { border-top-color: rgba(143, 220, 255, 0.12); }
+[data-variant="ice"] .variant-switch button[aria-pressed="true"] { background: var(--ink); color: #04121c; }
+[data-variant="ice"] body::before { /* звёздная пыль под всем содержимым */
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(1px 1px at 12% 18%, rgba(233, 243, 251, 0.5), transparent 60%),
+    radial-gradient(1px 1px at 72% 34%, rgba(233, 243, 251, 0.35), transparent 60%),
+    radial-gradient(1px 1px at 40% 78%, rgba(233, 243, 251, 0.3), transparent 60%),
+    radial-gradient(1.5px 1.5px at 88% 82%, rgba(143, 220, 255, 0.5), transparent 60%),
+    radial-gradient(900px 600px at 80% -10%, rgba(64, 140, 200, 0.18), transparent 70%);
+}
+
+/* ---------- Герой: поле кристаллов ---------- */
+.ice-hero { position: relative; height: min(100svh, 920px); min-height: 620px; margin-top: -64px; overflow: hidden; }
+.ice-hero canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.ice-hero .ice-copy { position: absolute; left: 0; right: 0; bottom: 9%; z-index: 2; pointer-events: none; }
+.ice-hero h1 { font-size: clamp(2.6rem, 1.2rem + 6.4vw, 7.2rem); line-height: 0.95; letter-spacing: -0.05em; font-weight: 300; max-width: 15ch; margin: 0 0 24px; }
+.ice-hero .lede { font-size: clamp(1.05rem, 0.95rem + 0.4vw, 1.3rem); color: var(--ink-2); max-width: 40ch; margin: 0 0 28px; }
+.ice-hero .ice-copy .actions { pointer-events: auto; }
+.ice-hud { position: absolute; z-index: 2; right: 20px; top: 92px; text-align: right; font: 400 0.8rem/1.6 var(--font-hud); color: var(--ink-3); }
+.ice-hud strong { display: block; font-size: 2.4rem; line-height: 1; color: var(--ink); font-weight: 300; }
+.ice-tip { position: absolute; z-index: 3; pointer-events: none; transform: translate(-50%, calc(-100% - 18px)); background: rgba(233, 243, 251, 0.95); color: #04121c; padding: 10px 14px; border-radius: 3px; font-size: 0.9rem; max-width: 260px; opacity: 0; transition: opacity 0.15s; }
+.ice-tip.show { opacity: 1; }
+.ice-tip b { display: block; font-weight: 600; }
+.ice-tip span { font: 400 0.75rem var(--font-hud); color: #335066; }
+.ice-fallback { position: absolute; inset: 0; background:
+  radial-gradient(600px 400px at 70% 35%, rgba(143, 220, 255, 0.22), transparent 70%),
+  radial-gradient(500px 500px at 25% 70%, rgba(64, 140, 200, 0.18), transparent 70%); }
+.ice-scroll { position: absolute; z-index: 2; left: 50%; bottom: 22px; transform: translateX(-50%); font: 400 0.75rem var(--font-hud); color: var(--ink-3); text-decoration: none; }
+
+/* ---------- Каталог: список «образцов льда» ---------- */
+.ice-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2px; background: rgba(143, 220, 255, 0.1); border: 1px solid rgba(143, 220, 255, 0.1); }
+.ice-item { position: relative; display: flex; flex-direction: column; gap: 10px; padding: 26px 24px 24px; min-height: 280px; background: var(--paper); color: var(--ink); text-decoration: none; overflow: hidden; transition: background-color 0.25s; }
+.ice-item:hover { background: #0b1626; }
+.ice-item .gem { width: 74px; height: 74px; margin-bottom: auto; transition: transform 0.5s cubic-bezier(.2,.7,.2,1); }
+.ice-item:hover .gem { transform: rotate(18deg) scale(1.08); }
+.ice-item h3 { font-size: 1.5rem; font-weight: 400; letter-spacing: -0.02em; margin: 0; }
+.ice-item p { color: var(--ink-2); font-size: 0.95rem; margin: 0; }
+.ice-item .hud { display: flex; gap: 16px; font: 400 0.78rem var(--font-hud); color: var(--ink-3); }
+.ice-item .hud .on { color: var(--route); }
+
+@media (prefers-reduced-motion: reduce) { .ice-item .gem { transition: none; } }
+@media (max-width: 640px) {
+  .ice-hero { min-height: 560px; height: 92svh; }
+  .ice-hud { top: 80px; }
+  .ice-hud strong { font-size: 1.8rem; }
+}

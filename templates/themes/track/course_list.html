@@ -1,0 +1,13 @@
+<div class="track-list">
+  {% for course in courses %}
+    <a class="track-item" href="{{ course.get_absolute_url }}">
+      <div class="cover">{% include "partials/cover.html" %}</div>
+      <div class="body">
+        {% if course.pk in enrolled_ids %}<span class="enrolled">Вы на трассе</span>{% endif %}
+        <h3>{{ course.title }}</h3>
+        <p>{{ course.short_description|default:course.description|truncatechars:120 }}</p>
+        <div class="facts"><span>Секторы <b>{{ course.levels_total }}</b></span><span>Повороты <b>{{ course.lessons_total }}</b></span><span>{{ course.get_difficulty_display }}</span></div>
+      </div>
+    </a>
+  {% endfor %}
+</div>

@@ -69,6 +69,24 @@
         </section>
       {% endif %}
 
+      <section class="comments" id="comments">
+        <h2>Обсуждение{% if comments %} <span class="muted" style="font-size:.8em">{{ comments|length }}</span>{% endif %}</h2>
+        {% for c in comments %}
+          {% include "partials/comment.html" %}
+          {% if c.replies.all %}<div class="replies">{% for r in c.replies.all %}{% include "partials/comment.html" with c=r reply=True %}{% endfor %}</div>{% endif %}
+        {% empty %}
+          <p class="muted">Вопросов по уроку пока нет. Спросите первым — ответят другие слушатели или администратор.</p>
+        {% endfor %}
+        {% if can_comment %}
+          <form method="post" action="{% url 'community:add_comment' lesson.pk %}" class="comment-form" style="margin-top:16px">
+            {% csrf_token %}
+            <label class="field-label" for="new-comment">Ваш вопрос или комментарий</label>
+            <textarea id="new-comment" name="text" maxlength="2000" required></textarea>
+            <button class="btn btn-primary btn-sm" type="submit" style="margin-top:8px">Отправить</button>
+          </form>
+        {% endif %}
+      </section>
+
       <nav class="lesson-nav" aria-label="Навигация по урокам">
         {% if prev_lesson %}<a class="btn btn-secondary" href="{{ prev_lesson.get_absolute_url }}">Предыдущий урок</a>{% else %}<span></span>{% endif %}
         {% if next_lesson %}<a class="btn btn-secondary" href="{{ next_lesson.get_absolute_url }}">Следующий урок</a>{% endif %}

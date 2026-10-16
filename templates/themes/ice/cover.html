@@ -1,0 +1,10 @@
+{% if course.cover %}<img src="{{ course.cover.url }}" alt="" loading="lazy">{% else %}<svg class="cover-placeholder" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <rect width="320" height="200" fill="#0b1626"/>
+  <g transform="translate(160 104) rotate({% widthratio course.pk 1 23 %}) scale(1.6)">
+    <polygon points="0,-58 34,-14 22,46 -22,46 -34,-14" fill="rgba(143,220,255,.10)" stroke="#8fdcff" stroke-width="1"/>
+    <polygon points="0,-58 34,-14 0,0" fill="rgba(233,243,251,.28)"/>
+    <polygon points="-34,-14 0,0 -22,46" fill="rgba(143,220,255,.16)"/>
+    <polyline points="-34,-14 0,0 34,-14" fill="none" stroke="#8fdcff" stroke-width=".8" opacity=".7"/>
+    <path d="M0,-58 L0,0 L-22,46 M0,0 L22,46" fill="none" stroke="#8fdcff" stroke-width=".8" opacity=".5"/>
+  </g>
+</svg>{% endif %}

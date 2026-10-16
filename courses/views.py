@@ -9,7 +9,7 @@ from django.views.decorators.http import require_POST
 from learning.models import Enrollment
 from learning.services import build_course_state, get_enrollment, is_lesson_available, mark_lesson_watched
 
-from .models import Course, Lesson, Material
+from .models import Category, Course, Lesson, Material
 
 
 def visible_courses(user):
@@ -22,11 +22,18 @@ def visible_courses(user):
 def catalog(request):
     """Ф-4. Каталог опубликованных курсов с поиском по названию."""
     query = request.GET.get("q", "").strip()
+    category = request.GET.get("category", "")
+    difficulty = request.GET.get("level", "")
     courses = (
         Course.objects.filter(is_published=True)
+        .select_related("category")
         .annotate(levels_total=Count("levels", distinct=True), lessons_total=Count("levels__lessons", distinct=True))
         .order_by("-created_at")
     )
+    if category.isdigit():
+        courses = courses.filter(category_id=int(category))
+    if difficulty in Course.Difficulty.values:
+        courses = courses.filter(difficulty=difficulty)
     if query:
         if connection.vendor == "sqlite":
             # SQLite сравнивает без учёта регистра только латиницу — для кириллицы ищем в Python
@@ -37,7 +44,25 @@ def catalog(request):
     enrolled_ids = set()
     if request.user.is_authenticated:
         enrolled_ids = set(request.user.enrollments.values_list("course_id", flat=True))
-    return render(request, "courses/catalog.html", {"courses": courses, "query": query, "enrolled_ids": enrolled_ids})
+    return render(
+        request,
+        "courses/catalog.html",
+        {
+            "courses": courses,
+            "query": query,
+            "enrolled_ids": enrolled_ids,
+            "categories": Category.objects.filter(courses__is_published=True).distinct(),
+            "difficulties": Course.Difficulty.choices,
+            "active_category": category,
+            "active_level": difficulty,
+            "filtered": bool(query or category or difficulty),
+            "hero_courses": _hero_courses(),
+            "stats": {
+                "courses": Course.objects.filter(is_published=True).count(),
+                "lessons": Lesson.objects.filter(level__course__is_published=True).count(),
+            },
+        },
+    )
 
 
 def course_detail(request, pk):
@@ -99,6 +124,8 @@ def lesson_detail(request, pk):
             "prev_lesson": prev_lesson,
             "next_lesson": next_lesson,
             "materials": lesson.materials.all(),
+            "comments": _lesson_comments(request.user, lesson),
+            "can_comment": bool(state.enrollment) or request.user.is_staff,
         },
     )
 
@@ -135,3 +162,39 @@ def material_download(request, pk):
         if not get_enrollment(request.user, lesson.level.course) or not is_lesson_available(request.user, lesson):
             raise Http404
     return FileResponse(material.file.open("rb"), as_attachment=True, filename=material.filename)
+
+
+def _lesson_comments(user, lesson):
+    from django.db.models import Prefetch
+
+    from community.models import Comment
+
+    visible = Comment.objects.select_related("user")
+    if not user.is_staff:
+        visible = visible.filter(is_hidden=False)
+    return (
+        visible.filter(lesson=lesson, parent__isnull=True)
+        .prefetch_related(Prefetch("replies", queryset=visible.order_by("created_at")))
+        .order_by("created_at")
+    )
+
+
+def _hero_courses():
+    """Данные для интерактивного героя каталога: название, ссылка, число уроков и уровней."""
+    rows = (
+        Course.objects.filter(is_published=True)
+        .annotate(lessons_total=Count("levels__lessons", distinct=True), levels_total=Count("levels", distinct=True))
+        .order_by("-lessons_total", "-created_at")[:12]
+    )
+    rows = rows.prefetch_related("levels__lessons")
+    return [
+        {
+            "id": c.pk,
+            "title": c.title,
+            "url": c.get_absolute_url(),
+            "lessons": c.lessons_total,
+            "levels": c.levels_total,
+            "sectors": [{"title": lv.title, "lessons": len(lv.lessons.all())} for lv in c.levels.all()],
+        }
+        for c in rows
+    ]

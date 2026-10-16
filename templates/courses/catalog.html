@@ -1,48 +1,50 @@
 {% extends "base.html" %}
 {% block title %}Каталог курсов{% endblock %}
 {% block content %}
-<div class="wrap">
-  <section class="catalog-head">
-    <h1>Учитесь шаг за шагом, в своём темпе</h1>
-    <p>Смотрите видеоуроки, сдавайте тест в конце уровня и открывайте следующий. После последнего уровня — сертификат.</p>
+{% with hero="themes/"|add:site_theme|add:"/hero.html" list="themes/"|add:site_theme|add:"/course_list.html" %}
+{% include hero %}
+
+<section class="wrap catalog-body" id="courses" aria-labelledby="courses-title">
+  <div class="catalog-tools">
+    <h2 id="courses-title" class="catalog-title">Курсы</h2>
     <form class="search" method="get" role="search">
+      {% if active_category %}<input type="hidden" name="category" value="{{ active_category }}">{% endif %}
+      {% if active_level %}<input type="hidden" name="level" value="{{ active_level }}">{% endif %}
       <label class="visually-hidden" for="q">Поиск по названию курса</label>
       <input type="search" id="q" name="q" value="{{ query }}" placeholder="Найти курс по названию">
       <button class="btn btn-primary" type="submit">Найти</button>
     </form>
-  </section>
+  </div>
 
-  <section class="page" style="padding-top:0">
-    {% if query %}<p class="muted">Результаты по запросу «{{ query }}». <a href="{% url 'courses:catalog' %}">Показать все курсы</a></p>{% endif %}
-    {% if courses %}
-      <div class="course-grid">
-        {% for course in courses %}
-          <a class="course-card" href="{{ course.get_absolute_url }}">
-            <div class="cover">{% include "partials/cover.html" %}</div>
-            <div class="body">
-              <h3>{{ course.title }}</h3>
-              <p>{{ course.short_description|default:course.description|truncatechars:140 }}</p>
-              <div class="meta">
-                <span>Уровней: {{ course.levels_total }}</span>
-                <span>Уроков: {{ course.lessons_total }}</span>
-                {% if course.pk in enrolled_ids %}<span class="badge ok">Вы записаны</span>{% endif %}
-              </div>
-            </div>
-          </a>
-        {% endfor %}
-      </div>
-    {% else %}
-      <div class="empty">
-        {% if query %}
-          <h2>Ничего не нашлось</h2>
-          <p>Курсов с «{{ query }}» в названии нет. Попробуйте другое слово.</p>
-          <a class="btn btn-secondary" href="{% url 'courses:catalog' %}">Все курсы</a>
-        {% else %}
-          <h2>Курсы скоро появятся</h2>
-          <p>Администратор ещё не опубликовал ни одного курса.</p>
-        {% endif %}
-      </div>
-    {% endif %}
-  </section>
-</div>
+  {% if categories or difficulties %}
+  <nav class="filters" aria-label="Фильтры">
+    <a class="chip" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if active_level %}level={{ active_level }}{% endif %}#courses" {% if not active_category %}aria-current="true"{% endif %}>Все направления</a>
+    {% for c in categories %}
+      <a class="chip" href="?category={{ c.pk }}{% if active_level %}&level={{ active_level }}{% endif %}{% if query %}&q={{ query|urlencode }}{% endif %}#courses" {% if active_category == c.pk|stringformat:"d" %}aria-current="true"{% endif %}>{{ c.name }}</a>
+    {% endfor %}
+    <span class="sep" aria-hidden="true"></span>
+    {% for key, label in difficulties %}
+      <a class="chip" href="?level={% if active_level != key %}{{ key }}{% endif %}{% if active_category %}&category={{ active_category }}{% endif %}{% if query %}&q={{ query|urlencode }}{% endif %}#courses" {% if active_level == key %}aria-current="true"{% endif %}>{{ label }}</a>
+    {% endfor %}
+  </nav>
+  {% endif %}
+
+  {% if filtered %}<p class="muted">{% if query %}Результаты по запросу «{{ query }}». {% endif %}<a href="{% url 'courses:catalog' %}#courses">Сбросить фильтры</a></p>{% endif %}
+
+  {% if courses %}
+    {% include list %}
+  {% else %}
+    <div class="empty">
+      {% if filtered %}
+        <h2>Ничего не нашлось</h2>
+        <p>Попробуйте другое слово или уберите фильтры.</p>
+        <a class="btn btn-secondary" href="{% url 'courses:catalog' %}#courses">Все курсы</a>
+      {% else %}
+        <h2>Курсы скоро появятся</h2>
+        <p>Администратор ещё не опубликовал ни одного курса.</p>
+      {% endif %}
+    </div>
+  {% endif %}
+</section>
+{% endwith %}
 {% endblock %}

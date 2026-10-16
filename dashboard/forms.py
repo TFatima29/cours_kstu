@@ -1,7 +1,7 @@
 from django import forms
 from django.forms import BaseInlineFormSet, inlineformset_factory
 
-from courses.models import Course, Lesson, Level, Material
+from courses.models import Category, Course, Lesson, Level, Material
 from quizzes.models import Choice, Question
 
 MAX_VIDEO_MB = 500
@@ -18,7 +18,7 @@ def _check_size(file, limit_mb):
 class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
-        fields = ["title", "short_description", "description", "cover", "is_published"]
+        fields = ["title", "category", "difficulty", "short_description", "description", "cover", "is_published"]
         widgets = {
             "description": forms.Textarea(attrs={"rows": 6}),
             "cover": forms.ClearableFileInput(attrs={"accept": "image/jpeg,image/png,image/webp"}),
@@ -26,6 +26,12 @@ class CourseForm(forms.ModelForm):
 
     def clean_cover(self):
         return _check_size(self.cleaned_data.get("cover"), MAX_COVER_MB)
+
+
+class CategoryForm(forms.ModelForm):
+    class Meta:
+        model = Category
+        fields = ["name", "order"]
 
 
 class LevelForm(forms.ModelForm):

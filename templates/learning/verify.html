@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Проверка сертификата{% endblock %}
+{% block content %}
+<div class="wrap page"><div class="narrow">
+  <h1>Проверка сертификата</h1>
+  <p class="muted">Введите номер с сертификата: 8 символов (например, 3F2A9C1B) или полный.</p>
+  <form method="get" class="panel" novalidate>
+    <div class="field"><label for="num">Номер сертификата</label><input id="num" name="number" value="{{ number|upper }}" autocomplete="off"></div>
+    <button class="btn btn-primary btn-block" type="submit">Проверить</button>
+  </form>
+  {% if checked %}
+    {% if cert %}
+      <div class="panel" style="margin-top:20px">
+        <span class="badge ok">Сертификат действителен</span>
+        <p style="margin-top:12px"><strong>{{ cert.enrollment.user.full_name }}</strong> прошёл(а) курс «{{ cert.enrollment.course.title }}» {{ cert.issued_at|date:"j E Y" }}.</p>
+        <a href="{% url 'learning:certificate' cert.number %}">Открыть сертификат</a>
+      </div>
+    {% else %}
+      <div class="flash error" style="margin-top:20px">Сертификат с таким номером не найден. Проверьте, нет ли опечатки.</div>
+    {% endif %}
+  {% endif %}
+</div></div>
+{% endblock %}

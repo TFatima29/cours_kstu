@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "quizzes",    # Нургуль: тесты и результаты
     "learning",   # запись на курс, прогресс, сертификаты
     "dashboard",  # Фатима: панель администратора
+    "community",  # комментарии под уроками и уведомления
 ]
 
 MIDDLEWARE = [
@@ -55,6 +56,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "community.context_processors.site",
             ],
         },
     },
@@ -121,6 +123,9 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "Course Platform <no-reply@courseplatform.local>")
+
+# Вариант оформления по умолчанию: route, ice, track, studio
+SITE_THEME = os.environ.get("SITE_THEME", "route")
 
 # Правила платформы
 PASS_THRESHOLD_DEFAULT = 80      # % правильных ответов для сдачи теста

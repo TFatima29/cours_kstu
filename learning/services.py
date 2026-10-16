@@ -158,5 +158,13 @@ def complete_course_if_done(user, course):
         return False
     enrollment.completed_at = timezone.now()
     enrollment.save(update_fields=["completed_at"])
-    Certificate.objects.get_or_create(enrollment=enrollment)
+    certificate, _ = Certificate.objects.get_or_create(enrollment=enrollment)
+    from community.models import Notification, notify
+
+    notify(
+        user,
+        Notification.Kind.COURSE_COMPLETED,
+        f"Курс «{course.title}» пройден. Сертификат готов.",
+        f"/certificates/{certificate.number}/",
+    )
     return True

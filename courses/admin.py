@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Course, Lesson, Level, Material
+from .models import Category, Course, Lesson, Level, Material
 
 
 class LevelInline(admin.TabularInline):
@@ -29,3 +29,4 @@ class LessonAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Level)
+admin.site.register(Category)

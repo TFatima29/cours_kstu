@@ -9,8 +9,30 @@ VIDEO_EXTENSIONS = ["mp4", "webm", "mov", "m4v"]
 MATERIAL_EXTENSIONS = ["pdf", "ppt", "pptx", "doc", "docx", "xls", "xlsx", "mp3", "wav", "ogg", "m4a", "zip", "txt"]
 
 
+class Category(models.Model):
+    name = models.CharField("название", max_length=100, unique=True)
+    order = models.PositiveIntegerField("порядок", default=0)
+
+    class Meta:
+        verbose_name = "категория"
+        verbose_name_plural = "категории"
+        ordering = ["order", "name"]
+
+    def __str__(self):
+        return self.name
+
+
 class Course(models.Model):
+    class Difficulty(models.TextChoices):
+        BEGINNER = "beginner", "С нуля"
+        INTERMEDIATE = "intermediate", "Средний"
+        ADVANCED = "advanced", "Продвинутый"
+
     title = models.CharField("название", max_length=200)
+    category = models.ForeignKey(
+        Category, on_delete=models.SET_NULL, null=True, blank=True, related_name="courses", verbose_name="категория"
+    )
+    difficulty = models.CharField("сложность", max_length=20, choices=Difficulty.choices, default=Difficulty.BEGINNER)
     short_description = models.CharField("кратко", max_length=300, blank=True)
     description = models.TextField("описание", blank=True)
     cover = models.ImageField(

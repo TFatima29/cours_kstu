@@ -20,6 +20,7 @@ urlpatterns = [
     path("levels/<int:level_pk>/questions/new/", views.question_form, name="question_create"),
     path("questions/<int:pk>/", views.question_form, name="question_edit"),
     path("questions/<int:pk>/delete/", views.question_delete, name="question_delete"),
+    path("categories/", views.categories, name="categories"),
     path("users/", views.user_list, name="user_list"),
     path("users/<int:pk>/", views.user_detail, name="user_detail"),
     path("users/<int:pk>/block/", views.user_toggle_block, name="user_block"),

@@ -1,0 +1,100 @@
+/* Вариант «Студия» — по мотивам activetheory.net.
+   Идея: каталог — шоурил. Живая жидкость на весь экран, у каждого курса свой цвет:
+   наведите на название — фон перетекает в его цвет. Интерфейс — белый текст на чёрном. */
+
+:root[data-variant="studio"] {
+  --paper: #000;
+  --surface: #0e0e0e;
+  --surface-2: #1a1a1a;
+  --ink: #f5f5f2;
+  --ink-2: #b4b4ae;
+  --ink-3: #7c7c76;
+  --line: #262626;
+  --route: #f5f5f2;
+  --route-soft: #1f1f1f;
+  --marker: #ff6a3d;
+  --marker-ink: #000;
+  --danger: #ff6b5a;
+  --danger-soft: #2a1210;
+  --ok-soft: #1c1c1c;
+  --focus: #ff6a3d;
+  --font-display: "Geologica", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Geologica", "Segoe UI", system-ui, sans-serif;
+  --r-sm: 999px;
+  --r-md: 999px;
+  --r-lg: 0;
+  --shadow: none;
+  color-scheme: dark;
+}
+
+[data-variant="studio"] body { font-weight: 300; }
+[data-variant="studio"] h1, [data-variant="studio"] h2 { font-weight: 300; letter-spacing: -0.04em; }
+[data-variant="studio"] h3 { font-weight: 400; }
+[data-variant="studio"] strong, [data-variant="studio"] b { font-weight: 500; }
+[data-variant="studio"] .topbar { background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4); border-bottom: 0; position: fixed; left: 0; right: 0; }
+[data-variant="studio"] main { padding-top: 64px; }
+[data-variant="studio"] .brand { font-weight: 500; letter-spacing: -0.01em; color: #fff; }
+[data-variant="studio"] .nav a, [data-variant="studio"] .icon-btn { color: #fff; }
+[data-variant="studio"] .nav a:hover, [data-variant="studio"] .nav a[aria-current="page"] { background: transparent; text-decoration: underline; text-underline-offset: 6px; }
+[data-variant="studio"] .btn { font-weight: 400; padding: 10px 22px; }
+[data-variant="studio"] .btn-primary { background: var(--ink); color: #000; }
+[data-variant="studio"] .btn-primary:hover { background: var(--marker); color: #000; }
+[data-variant="studio"] .btn-secondary { background: transparent; border-color: #555; color: var(--ink); }
+[data-variant="studio"] input[type="text"], [data-variant="studio"] input[type="email"], [data-variant="studio"] input[type="password"],
+[data-variant="studio"] input[type="search"], [data-variant="studio"] input[type="url"], [data-variant="studio"] input[type="number"], [data-variant="studio"] textarea, [data-variant="studio"] select {
+  border-radius: 12px; background: #0c0c0c;
+}
+[data-variant="studio"] .panel, [data-variant="studio"] .stat, [data-variant="studio"] .table-wrap, [data-variant="studio"] .my-course, [data-variant="studio"] .empty, [data-variant="studio"] .cert { border-radius: 20px; background: #0b0b0b; }
+[data-variant="studio"] .course-hero .cover, [data-variant="studio"] .my-course .thumb, [data-variant="studio"] .player { border-radius: 20px; }
+[data-variant="studio"] .progress > span { background: var(--marker); }
+[data-variant="studio"] .route-level.done::before { background: var(--ink); }
+[data-variant="studio"] .route-level.done .station { background: var(--ink); border-color: var(--ink); color: #000; }
+[data-variant="studio"] .route-level.current .station { background: var(--marker); border-color: var(--marker); color: #000; box-shadow: none; }
+[data-variant="studio"] .stop.quiz.ready { color: #000; background: var(--marker); }
+[data-variant="studio"] .chip { background: transparent; border-color: #333; color: var(--ink-2); font-weight: 400; }
+[data-variant="studio"] .chip[aria-current="true"] { background: var(--ink); border-color: var(--ink); color: #000; }
+[data-variant="studio"] .score { font-weight: 200; letter-spacing: -0.06em; }
+[data-variant="studio"] .result.pass .score { color: var(--ink); }
+[data-variant="studio"] .footer { border-top: 0; }
+[data-variant="studio"] .variant-switch button { background: transparent; border-color: #333; }
+[data-variant="studio"] .variant-switch button[aria-pressed="true"] { background: var(--ink); color: #000; }
+@media (max-width: 760px) { [data-variant="studio"] .nav { background: #000; } }
+
+/* ---------- Живой фон каталога ---------- */
+.studio-bg { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+.studio-bg canvas { width: 100%; height: 100%; display: block; }
+.studio-bg .fallback { position: absolute; inset: 0; background: radial-gradient(70% 60% at 70% 40%, #3a1a10, #000 70%); }
+[data-variant="studio"] .studio-page { position: relative; z-index: 1; }
+[data-variant="studio"] .studio-page .footer { position: relative; z-index: 1; }
+
+.studio-hero { min-height: calc(100svh - 64px); display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 8vh; }
+.studio-hero h1 { font-size: clamp(2.6rem, 0.9rem + 7.2vw, 9rem); line-height: 0.92; letter-spacing: -0.06em; font-weight: 200; margin: 0 0 28px; max-width: 13ch; }
+.studio-hero .row { display: flex; flex-wrap: wrap; gap: 24px 48px; align-items: flex-end; justify-content: space-between; }
+.studio-hero .lede { font-size: clamp(1.05rem, 0.95rem + 0.35vw, 1.3rem); max-width: 34ch; color: var(--ink-2); margin: 0; }
+.studio-hero .count { font-size: 0.95rem; color: var(--ink-2); }
+.studio-hero .count strong { display: block; font-size: clamp(3rem, 2rem + 3vw, 5rem); font-weight: 200; color: var(--ink); line-height: 1; letter-spacing: -0.05em; }
+
+[data-variant="studio"] .catalog-body { padding-top: 40px; }
+[data-variant="studio"] .catalog-title { font-weight: 300; }
+
+/* ---------- Каталог-шоурил ---------- */
+.reel { list-style: none; margin: 0; padding: 0; }
+.reel a { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 32px; align-items: baseline; padding: 22px 0; color: var(--ink); text-decoration: none; }
+.reel li + li a { border-top: 1px solid #1f1f1f; }
+.reel h3 { font: 200 clamp(2rem, 1rem + 4vw, 4.6rem)/1 var(--font-display); letter-spacing: -0.05em; margin: 0; transition: transform 0.45s cubic-bezier(.2,.7,.2,1), color 0.3s; }
+.reel .meta { text-align: right; color: var(--ink-2); font-size: 0.92rem; line-height: 1.5; white-space: nowrap; }
+.reel .desc { grid-column: 1 / -1; color: var(--ink-2); max-width: 60ch; margin: 0; max-height: 0; opacity: 0; overflow: hidden; transition: max-height 0.4s, opacity 0.3s; }
+.reel a:hover h3, .reel a:focus-visible h3 { transform: translateX(18px); color: var(--hue, var(--marker)); }
+.reel a:hover .desc, .reel a:focus-visible .desc { max-height: 4em; opacity: 1; }
+.reel .mine { color: var(--marker); }
+.reel-preview { position: fixed; z-index: 5; width: 300px; aspect-ratio: 16 / 10; border-radius: 16px; overflow: hidden; pointer-events: none; opacity: 0; transform: translate(-50%, -50%) scale(0.9); transition: opacity 0.2s, transform 0.25s; }
+.reel-preview.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.reel-preview img, .reel-preview svg { width: 100%; height: 100%; object-fit: cover; display: block; }
+@media (hover: none), (max-width: 760px) {
+  .reel .desc { max-height: none; opacity: 1; }
+  .reel a { grid-template-columns: 1fr; }
+  .reel .meta { text-align: left; }
+  .reel-preview { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .reel h3, .reel .desc, .reel-preview { transition: none; } }
+[data-variant="studio"] main, [data-variant="studio"] .footer { position: relative; z-index: 1; }

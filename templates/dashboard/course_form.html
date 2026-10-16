@@ -14,6 +14,8 @@
   {% csrf_token %}
   <div class="form-grid">
     {% include "partials/field.html" with field=form.title full=1 %}
+    {% include "partials/field.html" with field=form.category %}
+    {% include "partials/field.html" with field=form.difficulty %}
     {% include "partials/field.html" with field=form.short_description full=1 %}
     {% include "partials/field.html" with field=form.description full=1 %}
     {% include "partials/field.html" with field=form.cover %}

@@ -1,0 +1,22 @@
+{% extends "dashboard/base_dash.html" %}
+{% block title %}Категории{% endblock %}
+{% block dash %}
+<div class="page-head"><h1>Категории курсов</h1></div>
+<div class="panel">
+  <ul class="list-plain">
+    {% for c in items %}
+      <li><div class="grow"><strong>{{ c.name }}</strong><div class="small muted">Курсов: {{ c.total }}, порядок {{ c.order }}</div></div>
+        <form method="post" data-confirm="Удалить категорию «{{ c.name }}»?">{% csrf_token %}<button class="btn btn-ghost btn-sm" name="delete" value="{{ c.pk }}">Удалить</button></form></li>
+    {% empty %}<li class="muted">Категорий пока нет.</li>{% endfor %}
+  </ul>
+  <h3 style="margin-top:20px">Добавить категорию</h3>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="form-grid" style="grid-template-columns:3fr 1fr">
+      {% include "partials/field.html" with field=form.name %}
+      {% include "partials/field.html" with field=form.order %}
+    </div>
+    <button class="btn btn-primary" type="submit">Добавить</button>
+  </form>
+</div>
+{% endblock %}

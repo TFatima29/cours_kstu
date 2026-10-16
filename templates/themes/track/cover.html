@@ -1,0 +1,1 @@
+{% if course.cover %}<img src="{{ course.cover.url }}" alt="" loading="lazy">{% else %}<svg class="mini-circuit" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid meet" data-seed="{{ course.pk }}" data-lessons="{{ course.lessons_total|default:course.lessons_count }}" aria-hidden="true"></svg>{% endif %}

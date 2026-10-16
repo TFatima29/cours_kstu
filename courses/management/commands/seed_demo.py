@@ -10,7 +10,7 @@ from django.core.files import File
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from courses.models import Course, Lesson, Level, Material
+from courses.models import Category, Course, Lesson, Level, Material
 from quizzes.models import Choice, Question
 
 DEMO_DIR = Path(settings.BASE_DIR) / "demo"
@@ -18,6 +18,8 @@ DEMO_DIR = Path(settings.BASE_DIR) / "demo"
 COURSES = [
     {
         "title": "Python с нуля",
+        "category": "Программирование",
+        "difficulty": "beginner",
         "short": "Переменные, условия, циклы и функции — на коротких видео и простых задачах.",
         "description": (
             "Курс для тех, кто никогда не программировал. Каждый уровень — одна большая тема: "
@@ -55,6 +57,8 @@ COURSES = [
     },
     {
         "title": "Вёрстка: HTML и CSS",
+        "category": "Веб-разработка",
+        "difficulty": "beginner",
         "short": "Как устроена веб-страница: теги, стили, отступы и адаптивная сетка.",
         "description": "Соберёте свою первую страницу и научитесь делать её удобной на телефоне.",
         "levels": [
@@ -72,6 +76,78 @@ COURSES = [
                 "questions": [
                     ("Какое свойство меняет цвет текста?", ["background", "font", "color", "text-color"], 2),
                     ("Что включает flex-раскладку?", ["display: flex", "flex: on", "layout: flex", "position: flex"], 0),
+                ],
+            },
+        ],
+    },
+    {
+        "title": "SQL и базы данных",
+        "category": "Программирование",
+        "difficulty": "intermediate",
+        "short": "SELECT, JOIN, группировки и проектирование таблиц на примере базы студентов.",
+        "description": "Для тех, кто знает основы программирования и хочет уверенно работать с данными.",
+        "levels": [
+            {
+                "title": "Запросы SELECT",
+                "lessons": ["Выборка и фильтрация", "Сортировка и LIMIT"],
+                "questions": [
+                    ("Какой оператор фильтрует строки?", ["ORDER BY", "WHERE", "GROUP BY", "FROM"], 1),
+                    ("Как выбрать все столбцы?", ["SELECT ALL", "SELECT *", "SELECT columns", "GET *"], 1),
+                ],
+            },
+            {
+                "title": "Соединения таблиц",
+                "lessons": ["INNER JOIN", "LEFT JOIN"],
+                "questions": [
+                    ("Какой JOIN сохраняет все строки левой таблицы?", ["INNER", "LEFT", "CROSS", "SELF"], 1),
+                ],
+            },
+        ],
+    },
+    {
+        "title": "UX/UI-дизайн: основы",
+        "category": "Дизайн",
+        "difficulty": "beginner",
+        "short": "Как исследовать пользователей, рисовать макеты и проверять их на людях.",
+        "description": "Разберёте путь от идеи до кликабельного прототипа и научитесь замечать ошибки интерфейса.",
+        "levels": [
+            {
+                "title": "Исследование",
+                "lessons": ["Кто ваш пользователь", "Интервью и сценарии"],
+                "questions": [
+                    ("Что такое персона?", ["Шрифт", "Портрет типичного пользователя", "Цветовая схема", "Логотип"], 1),
+                ],
+            },
+        ],
+    },
+    {
+        "title": "Английский для IT",
+        "category": "Языки",
+        "difficulty": "intermediate",
+        "short": "Читать документацию, писать коммиты и проходить собеседования на английском.",
+        "description": "Лексика разработчика, грамматика технических текстов и практика устной речи.",
+        "levels": [
+            {
+                "title": "Документация",
+                "lessons": ["Как читать README", "Термины в коде"],
+                "questions": [
+                    ("Что значит deprecated?", ["Новый", "Устаревший", "Быстрый", "Скрытый"], 1),
+                ],
+            },
+        ],
+    },
+    {
+        "title": "JavaScript для веба",
+        "category": "Веб-разработка",
+        "difficulty": "advanced",
+        "short": "DOM, события, fetch и асинхронность — делаем страницы живыми.",
+        "description": "Курс для тех, кто уже сверстал пару страниц и хочет добавить в них логику.",
+        "levels": [
+            {
+                "title": "DOM и события",
+                "lessons": ["Поиск элементов", "Обработчики событий"],
+                "questions": [
+                    ("Какой метод находит элемент по селектору?", ["getElement()", "querySelector()", "find()", "select()"], 1),
                 ],
             },
         ],
@@ -104,8 +180,14 @@ class Command(BaseCommand):
         for spec in COURSES:
             if Course.objects.filter(title=spec["title"]).exists():
                 continue
+            category, _ = Category.objects.get_or_create(name=spec["category"])
             course = Course.objects.create(
-                title=spec["title"], short_description=spec["short"], description=spec["description"], is_published=True
+                title=spec["title"],
+                category=category,
+                difficulty=spec["difficulty"],
+                short_description=spec["short"],
+                description=spec["description"],
+                is_published=True,
             )
             for li, lv in enumerate(spec["levels"], start=1):
                 level = Level.objects.create(course=course, title=lv["title"], order=li)

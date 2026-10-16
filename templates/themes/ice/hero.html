@@ -1,0 +1,22 @@
+{% load static %}
+<section class="ice-hero" aria-labelledby="ice-title">
+  <div class="ice-fallback" aria-hidden="true"></div>
+  <canvas id="ice-canvas" aria-hidden="true"></canvas>
+  <div class="ice-hud" aria-hidden="true">
+    <strong>{{ stats.courses }}</strong>курсов во льду
+    <strong style="margin-top:14px">{{ stats.lessons }}</strong>видеоуроков
+  </div>
+  <div class="ice-tip" id="ice-tip" role="status"></div>
+  <div class="wrap ice-copy">
+    <h1 id="ice-title">Знания, которые не тают</h1>
+    <p class="lede">Каждый кристалл — курс: чем больше уроков, тем он крупнее. Наведите или нажмите на любой, чтобы узнать, что внутри.</p>
+    <div class="actions">
+      <a class="btn btn-primary" href="#courses">Выбрать курс</a>
+      {% if not user.is_authenticated %}<a class="btn btn-secondary" href="{% url 'accounts:register' %}">Создать аккаунт</a>{% endif %}
+    </div>
+  </div>
+  <a class="ice-scroll" href="#courses">вниз к курсам</a>
+  {{ hero_courses|json_script:"hero-courses" }}
+</section>
+<script src="{% static 'vendor/three.min.js' %}" defer></script>
+<script src="{% static 'js/themes/ice.js' %}" defer></script>

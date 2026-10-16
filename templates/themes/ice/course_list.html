@@ -1,0 +1,21 @@
+<div class="ice-list">
+  {% for course in courses %}
+    <a class="ice-item" href="{{ course.get_absolute_url }}">
+      <svg class="gem" viewBox="0 0 80 80" aria-hidden="true" style="transform:rotate({% widthratio course.pk 1 37 %}deg)">
+        <polygon points="40,4 70,28 58,74 22,74 10,28" fill="rgba(143,220,255,.08)" stroke="var(--route)" stroke-width="1.2"/>
+        <polyline points="10,28 40,40 70,28" fill="none" stroke="var(--route)" stroke-width="1" opacity=".7"/>
+        <polyline points="40,4 40,40 22,74" fill="none" stroke="var(--route)" stroke-width="1" opacity=".5"/>
+        <polyline points="40,40 58,74" fill="none" stroke="var(--route)" stroke-width="1" opacity=".5"/>
+        <polygon points="40,4 70,28 40,40" fill="rgba(233,243,251,.22)"/>
+      </svg>
+      <h3>{{ course.title }}</h3>
+      <p>{{ course.short_description|default:course.description|truncatechars:120 }}</p>
+      <div class="hud">
+        <span>{{ course.get_difficulty_display }}</span>
+        <span>{{ course.levels_total }} ур.</span>
+        <span>{{ course.lessons_total }} видео</span>
+        {% if course.pk in enrolled_ids %}<span class="on">вы записаны</span>{% endif %}
+      </div>
+    </a>
+  {% endfor %}
+</div>

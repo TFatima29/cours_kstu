@@ -186,7 +186,7 @@ class DashboardTests(TestCase):
 
     def test_admin_creates_course_level_question(self):
         self.client.force_login(self.admin)
-        r = self.client.post(reverse("dashboard:course_create"), {"title": "Новый", "description": "x"})
+        r = self.client.post(reverse("dashboard:course_create"), {"title": "Новый", "description": "x", "difficulty": "beginner"})
         course = Course.objects.get(title="Новый")
         self.assertRedirects(r, reverse("dashboard:course_edit", args=[course.pk]))
         self.client.post(reverse("dashboard:level_create", args=[course.pk]), {"title": "L1", "order": 1, "pass_threshold": 70})

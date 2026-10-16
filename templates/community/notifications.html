@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Уведомления{% endblock %}
+{% block content %}
+<div class="wrap page">
+  <div class="narrow" style="max-width:720px">
+    <h1>Уведомления</h1>
+    {% for n in items %}
+      <a class="notif{% if not n.is_read %} unread{% endif %}" href="{% url 'community:open_notification' n.pk %}">
+        <span class="notif-dot" aria-hidden="true"></span>
+        <span><span>{{ n.text }}</span><br><span class="small muted">{{ n.created_at|date:"j E, H:i" }}</span></span>
+      </a>
+    {% empty %}
+      <div class="empty"><h2>Пока тихо</h2><p>Здесь появятся сообщения об открытых уровнях, пройденных курсах, новых курсах и ответах на ваши комментарии.</p></div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

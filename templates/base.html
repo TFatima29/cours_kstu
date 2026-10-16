@@ -1,16 +1,17 @@
 {% load static %}<!doctype html>
-<html lang="ru">
+<html lang="ru" data-variant="{{ site_theme }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Course Platform{% endblock %} — Course Platform</title>
+  {% if site_theme == "route" or site_theme == "track" %}
   <script>
     try { var t = localStorage.getItem("cp-theme"); if (t) document.documentElement.setAttribute("data-theme", t); } catch (e) {}
   </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@500;600;700&display=swap" rel="stylesheet">
+  {% endif %}
+  <link rel="stylesheet" href="{% static 'fonts/fonts.css' %}">
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  {% if site_theme != "route" %}<link rel="stylesheet" href="{% static 'css/themes/'|add:site_theme|add:'.css' %}">{% endif %}
   <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml">
   {% block head %}{% endblock %}
 </head>
@@ -40,9 +41,17 @@
       </nav>
       {% endwith %}
       <div class="topbar-right">
+        {% if site_theme == "route" or site_theme == "track" %}
         <button class="icon-btn" id="theme-toggle" type="button" aria-label="Сменить тему">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
         </button>
+        {% endif %}
+        {% if user.is_authenticated %}
+        <a class="icon-btn bell" href="{% url 'community:notifications' %}" aria-label="Уведомления{% if unread_notifications %}: новых {{ unread_notifications }}{% endif %}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          {% if unread_notifications %}<span class="bell-count">{{ unread_notifications }}</span>{% endif %}
+        </a>
+        {% endif %}
         {% if user.is_authenticated %}
           <details class="user-menu">
             <summary aria-label="Меню профиля">
@@ -78,9 +87,21 @@
   </main>
 
   <footer class="footer">
-    <div class="wrap">Course Platform — платформа онлайн-обучения. КГТУ им. И. Раззакова, 2026.</div>
+    <div class="wrap footer-inner">
+      <span>Course Platform — платформа онлайн-обучения. КГТУ им. И. Раззакова, 2026.</span>
+      <a href="{% url 'learning:verify' %}">Проверить сертификат</a>
+      <form method="post" action="{% url 'community:set_theme' %}" class="variant-switch">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <span>Оформление:</span>
+        {% for key, name in site_themes.items %}
+          <button type="submit" name="theme" value="{{ key }}" {% if key == site_theme %}aria-pressed="true"{% endif %}>{{ name }}</button>
+        {% endfor %}
+      </form>
+    </div>
   </footer>
   <script src="{% static 'js/app.js' %}"></script>
+  {% if site_theme == "track" %}<script src="{% static 'js/themes/track.js' %}"></script>{% endif %}
   {% block scripts %}{% endblock %}
 </body>
 </html>

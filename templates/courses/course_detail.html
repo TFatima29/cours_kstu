@@ -5,6 +5,7 @@
   <section class="course-hero">
     <div>
       <p class="crumbs"><a href="{% url 'courses:catalog' %}">Каталог</a></p>
+      <p class="course-tags">{% if course.category %}<span class="badge">{{ course.category }}</span>{% endif %}<span class="badge">{{ course.get_difficulty_display }}</span></p>
       <h1>{{ course.title }}</h1>
       {% if not course.is_published %}<p><span class="badge danger">Черновик — виден только администраторам</span></p>{% endif %}
       {% if course.short_description %}<p class="lead">{{ course.short_description }}</p>{% endif %}

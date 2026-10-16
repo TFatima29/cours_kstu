@@ -11,12 +11,13 @@ from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from courses.models import Course, Lesson, Level
+from community.models import Notification
+from courses.models import Category, Course, Lesson, Level
 from learning.models import Certificate, Enrollment
 from learning.services import build_course_state
 from quizzes.models import Question, QuizAttempt
 
-from .forms import ChoiceFormSet, CourseForm, LessonForm, LevelForm, MaterialFormSet, QuestionForm
+from .forms import CategoryForm, ChoiceFormSet, CourseForm, LessonForm, LevelForm, MaterialFormSet, QuestionForm
 
 User = get_user_model()
 
@@ -31,6 +32,17 @@ def staff_required(view):
         return view(request, *args, **kwargs)
 
     return wrapper
+
+
+def announce_course(course):
+    """Уведомление всем обучающимся о новом опубликованном курсе (один раз на курс)."""
+    url = course.get_absolute_url()
+    if Notification.objects.filter(kind=Notification.Kind.NEW_COURSE, url=url).exists():
+        return
+    Notification.objects.bulk_create(
+        Notification(user=u, kind=Notification.Kind.NEW_COURSE, text=f"Новый курс: «{course.title}»", url=url)
+        for u in User.objects.filter(is_active=True, is_staff=False).only("pk")
+    )
 
 
 @staff_required
@@ -68,6 +80,8 @@ def course_create(request):
     form = CourseForm(request.POST or None, request.FILES or None)
     if request.method == "POST" and form.is_valid():
         course = form.save()
+        if course.is_published:
+            announce_course(course)
         messages.success(request, "Курс создан. Теперь добавьте уровни.")
         return redirect("dashboard:course_edit", pk=course.pk)
     return render(request, "dashboard/course_form.html", {"form": form})
@@ -77,8 +91,11 @@ def course_create(request):
 def course_edit(request, pk):
     course = get_object_or_404(Course, pk=pk)
     form = CourseForm(request.POST or None, request.FILES or None, instance=course)
+    was_published = course.is_published
     if request.method == "POST" and form.is_valid():
         form.save()
+        if course.is_published and not was_published:
+            announce_course(course)
         messages.success(request, "Курс сохранён.")
         return redirect("dashboard:course_edit", pk=course.pk)
     levels = course.levels.annotate(
@@ -95,6 +112,8 @@ def course_toggle_publish(request, pk):
     course = get_object_or_404(Course, pk=pk)
     course.is_published = not course.is_published
     course.save(update_fields=["is_published", "updated_at"])
+    if course.is_published:
+        announce_course(course)
     messages.success(request, "Курс опубликован." if course.is_published else "Курс скрыт из каталога.")
     return redirect(request.POST.get("next") or "dashboard:course_list")
 
@@ -268,3 +287,21 @@ def user_detail(request, pk):
     items = [build_course_state(target, e.course, e) for e in enrollments]
     attempts = QuizAttempt.objects.filter(user=target).select_related("level__course")[:30]
     return render(request, "dashboard/user_detail.html", {"target": target, "items": items, "attempts": attempts})
+
+
+# ---------- Категории курсов ----------
+@staff_required
+def categories(request):
+    form = CategoryForm(request.POST or None)
+    if request.method == "POST":
+        delete_id = request.POST.get("delete")
+        if delete_id and delete_id.isdigit():
+            Category.objects.filter(pk=delete_id).delete()
+            messages.success(request, "Категория удалена. Курсы остались без категории.")
+            return redirect("dashboard:categories")
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Категория добавлена.")
+            return redirect("dashboard:categories")
+    items = Category.objects.annotate(total=Count("courses"))
+    return render(request, "dashboard/categories.html", {"form": form, "items": items})
