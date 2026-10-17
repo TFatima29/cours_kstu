@@ -14,7 +14,7 @@ def _quiz_guard(request, level):
     """Возвращает redirect, если тест сейчас недоступен, иначе None."""
     course = level.course
     if not get_enrollment(request.user, course):
-        messages.info(request, "Сначала запишитесь на курс.")
+        messages.info(request, "У вас нет доступа к этому курсу. Его выдаёт администратор.")
         return redirect(course.get_absolute_url())
     state = build_course_state(request.user, course)
     level_state = state.state_for_level(level.pk)
@@ -63,6 +63,36 @@ def take_quiz(request, level_id):
         "quizzes/take_quiz.html",
         {"level": level, "course": level.course, "questions": questions, "selected": selected, "errors": errors},
     )
+
+
+@login_required
+@learner_only
+def my_tests(request):
+    """Отдельный раздел «Тесты»: все тесты доступных курсов, их статус и лучший результат."""
+    from django.db.models import Count
+
+    attempts_count = dict(
+        QuizAttempt.objects.filter(user=request.user).values("level").annotate(n=Count("pk")).values_list("level", "n")
+    )
+    groups = []
+    for enrollment in request.user.enrollments.select_related("course").filter(course__is_published=True):
+        state = build_course_state(request.user, enrollment.course, enrollment)
+        tests = []
+        for ls in state.levels:
+            if not ls.has_quiz:
+                continue
+            if ls.quiz_passed:
+                status = "passed"
+            elif ls.quiz_available:
+                status = "available"
+            elif ls.unlocked:
+                status = "lessons"
+            else:
+                status = "locked"
+            tests.append({"state": ls, "status": status, "attempts": attempts_count.get(ls.level.pk, 0)})
+        if tests:
+            groups.append({"course": enrollment.course, "tests": tests})
+    return render(request, "quizzes/my_tests.html", {"groups": groups})
 
 
 @login_required

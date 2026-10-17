@@ -7,10 +7,9 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from accounts.roles import learner_only
-from learning.models import Enrollment
 from learning.services import build_course_state, get_enrollment, is_lesson_available, mark_lesson_watched
 
-from .models import Category, Course, Lesson, Material
+from .models import Category, Course, Lesson, LibraryItem, Material
 
 
 def visible_courses(user):
@@ -20,14 +19,27 @@ def visible_courses(user):
     return qs
 
 
+def accessible_courses(user):
+    """Опубликованные курсы, видимые пользователю.
+
+    Оплаты на сайте нет: обучающийся видит только курсы, к которым администратор выдал доступ.
+    Гость видит витрину всех опубликованных курсов с ценами.
+    """
+    qs = Course.objects.filter(is_published=True)
+    if user.is_authenticated and not user.is_staff:
+        qs = qs.filter(enrollments__user=user)
+    return qs
+
+
 @learner_only
 def catalog(request):
-    """Ф-4. Каталог опубликованных курсов с поиском по названию."""
+    """Ф-4. Каталог курсов с поиском по названию."""
     query = request.GET.get("q", "").strip()
     category = request.GET.get("category", "")
     difficulty = request.GET.get("level", "")
+    base = accessible_courses(request.user)
     courses = (
-        Course.objects.filter(is_published=True)
+        base
         .select_related("category")
         .annotate(levels_total=Count("levels", distinct=True), lessons_total=Count("levels__lessons", distinct=True))
         .order_by("-created_at")
@@ -53,15 +65,15 @@ def catalog(request):
             "courses": courses,
             "query": query,
             "enrolled_ids": enrolled_ids,
-            "categories": Category.objects.filter(courses__is_published=True).distinct(),
+            "categories": Category.objects.filter(courses__in=base).distinct(),
             "difficulties": Course.Difficulty.choices,
             "active_category": category,
             "active_level": difficulty,
             "filtered": bool(query or category or difficulty),
-            "hero_courses": _hero_courses(),
+            "hero_courses": _hero_courses(base),
             "stats": {
-                "courses": Course.objects.filter(is_published=True).count(),
-                "lessons": Lesson.objects.filter(level__course__is_published=True).count(),
+                "courses": base.count(),
+                "lessons": Lesson.objects.filter(level__course__in=base).count(),
             },
         },
     )
@@ -71,22 +83,23 @@ def course_detail(request, pk):
     """Ф-5. Карточка курса: описание, уровни и уроки, кнопка «Записаться»."""
     course = get_object_or_404(visible_courses(request.user), pk=pk)
     state = build_course_state(request.user, course)
-    return render(request, "courses/course_detail.html", {"course": course, "state": state})
+    if request.user.is_authenticated and not request.user.is_staff and not state.enrollment:
+        messages.info(request, "У вас нет доступа к этому курсу. Его выдаёт администратор платформы.")
+        return redirect("learning:my_courses")
+    return render(
+        request,
+        "courses/course_detail.html",
+        {"course": course, "state": state, "recent_comments": _course_comments(request.user, course) if state.enrollment else []},
+    )
 
 
 @login_required
 @learner_only
 @require_POST
 def enroll(request, pk):
-    """Ф-6. Запись на курс без оплаты."""
-    course = get_object_or_404(Course, pk=pk, is_published=True)
-    _, created = Enrollment.objects.get_or_create(user=request.user, course=course)
-    if created:
-        messages.success(request, f"Вы записались на курс «{course.title}». Он появился в разделе «Мои курсы».")
-    state = build_course_state(request.user, course)
-    if state.next_lesson:
-        return redirect(state.next_lesson.get_absolute_url())
-    return redirect(course.get_absolute_url())
+    """Ф-6. Самостоятельной записи нет: доступ к курсу выдаёт администратор."""
+    messages.info(request, "Доступ к курсам выдаёт администратор платформы.")
+    return redirect("learning:my_courses")
 
 
 @login_required
@@ -97,8 +110,8 @@ def lesson_detail(request, pk):
     if not course.is_published and not request.user.is_staff:
         raise Http404
     if not request.user.is_staff and not get_enrollment(request.user, course):
-        messages.info(request, "Сначала запишитесь на курс.")
-        return redirect(course.get_absolute_url())
+        messages.info(request, "У вас нет доступа к этому курсу. Его выдаёт администратор.")
+        return redirect("learning:my_courses")
     state = build_course_state(request.user, course)
     level_state = state.state_for_level(lesson.level_id)
     if not request.user.is_staff and not level_state.unlocked:
@@ -127,6 +140,7 @@ def lesson_detail(request, pk):
             "prev_lesson": prev_lesson,
             "next_lesson": next_lesson,
             "materials": lesson.materials.all(),
+            "library_materials": lesson.library_materials.filter(kind=LibraryItem.Kind.FILE),
             "comments": _lesson_comments(request.user, lesson),
             "can_comment": bool(state.enrollment) or request.user.is_staff,
         },
@@ -167,6 +181,27 @@ def material_download(request, pk):
     return FileResponse(material.file.open("rb"), as_attachment=True, filename=material.filename)
 
 
+@login_required
+def library_download(request, lesson_pk, pk):
+    """Скачивание файла из библиотеки, подключённого к уроку."""
+    lesson = get_object_or_404(Lesson.objects.select_related("level__course"), pk=lesson_pk)
+    item = get_object_or_404(lesson.library_materials, pk=pk)
+    if not request.user.is_staff:
+        if not get_enrollment(request.user, lesson.level.course) or not is_lesson_available(request.user, lesson):
+            raise Http404
+    return FileResponse(item.file.open("rb"), as_attachment=True, filename=item.filename)
+
+
+def _course_comments(user, course, limit=8):
+    """Последние комментарии по всем урокам курса — для страницы курса."""
+    from community.models import Comment
+
+    qs = Comment.objects.select_related("user", "lesson").filter(lesson__level__course=course)
+    if not user.is_staff:
+        qs = qs.filter(is_hidden=False)
+    return qs.order_by("-created_at")[:limit]
+
+
 def _lesson_comments(user, lesson):
     from django.db.models import Prefetch
 
@@ -182,10 +217,11 @@ def _lesson_comments(user, lesson):
     )
 
 
-def _hero_courses():
+def _hero_courses(base=None):
     """Данные для интерактивного героя каталога: название, ссылка, число уроков и уровней."""
+    base = Course.objects.filter(is_published=True) if base is None else base
     rows = (
-        Course.objects.filter(is_published=True)
+        base
         .annotate(lessons_total=Count("levels__lessons", distinct=True), levels_total=Count("levels", distinct=True))
         .order_by("-lessons_total", "-created_at")[:12]
     )

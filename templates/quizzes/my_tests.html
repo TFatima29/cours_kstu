@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Мои тесты{% endblock %}
+{% block content %}
+<div class="wrap page">
+  <div class="page-head"><h1>Тесты</h1><a class="btn btn-secondary" href="{% url 'learning:my_courses' %}">Мои курсы</a></div>
+  <p class="muted">Тест уровня открывается, когда просмотрены все его уроки. Пересдавать можно сколько угодно раз — засчитывается лучший результат.</p>
+  {% for g in groups %}
+    <section class="panel">
+      <h2 style="margin-bottom:12px"><a href="{{ g.course.get_absolute_url }}" style="color:inherit">{{ g.course.title }}</a></h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Уровень</th><th>Порог</th><th class="num">Лучший результат</th><th class="num">Попыток</th><th>Статус</th><th></th></tr></thead>
+        <tbody>{% for t in g.tests %}
+          <tr>
+            <td>{{ t.state.level.title }}</td>
+            <td>{{ t.state.level.pass_threshold }}%</td>
+            <td class="num">{% if t.state.best_score is not None %}{{ t.state.best_score }}%{% else %}—{% endif %}</td>
+            <td class="num">{{ t.attempts }}</td>
+            <td>
+              {% if t.status == "passed" %}<span class="badge ok">сдан</span>
+              {% elif t.status == "available" %}<span class="badge mark">можно сдавать</span>
+              {% elif t.status == "lessons" %}<span class="badge">досмотрите уроки ({{ t.state.lessons_watched }} из {{ t.state.lessons|length }})</span>
+              {% else %}<span class="badge">уровень закрыт</span>{% endif %}
+            </td>
+            <td>{% if t.status == "available" or t.status == "passed" %}<a class="btn btn-{% if t.status == 'available' %}primary{% else %}secondary{% endif %} btn-sm" href="{% url 'quizzes:take' t.state.level.pk %}">{% if t.status == "passed" %}Пересдать{% else %}Пройти тест{% endif %}</a>{% endif %}</td>
+          </tr>
+        {% endfor %}</tbody>
+      </table></div>
+    </section>
+  {% empty %}
+    <div class="empty"><h2>Тестов пока нет</h2><p>Тесты появятся, когда администратор откроет вам доступ к курсу с тестами.</p></div>
+  {% endfor %}
+</div>
+{% endblock %}

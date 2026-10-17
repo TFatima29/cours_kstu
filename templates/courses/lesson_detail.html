@@ -11,8 +11,8 @@
       {% csrf_token %}
       {% if lesson.has_video %}
         <div class="player" id="lesson-player" data-watched-url="{% url 'courses:lesson_watched' lesson.pk %}" data-watched="{{ watched|yesno:'true,false' }}" data-ratio="0.9">
-          {% if lesson.video_file %}
-            <video controls preload="metadata" playsinline src="{{ lesson.video_file.url }}"></video>
+          {% if lesson.video_source %}
+            <video controls preload="metadata" playsinline src="{{ lesson.video_source.url }}"></video>
           {% elif lesson.youtube_id %}
             <div data-youtube-id="{{ lesson.youtube_id }}"></div>
           {% else %}
@@ -58,12 +58,15 @@
         </section>
       {% endif %}
 
-      {% if materials %}
+      {% if materials or library_materials %}
         <section style="margin-top:32px">
           <h2>Материалы</h2>
           <ul class="materials">
             {% for m in materials %}
               <li><a href="{% url 'courses:material_download' m.pk %}"><span class="file-ext">{{ m.extension }}</span><span>{{ m }}</span><span class="small muted" style="margin-left:auto">Скачать</span></a></li>
+            {% endfor %}
+            {% for m in library_materials %}
+              <li><a href="{% url 'courses:library_download' lesson.pk m.pk %}"><span class="file-ext">{{ m.extension }}</span><span>{{ m }}</span><span class="small muted" style="margin-left:auto">Скачать</span></a></li>
             {% endfor %}
           </ul>
         </section>

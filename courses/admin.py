@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Category, Course, Lesson, Level, Material
+from .models import Category, Course, Lesson, Level, LibraryItem, Material
 
 
 class LevelInline(admin.TabularInline):
@@ -15,7 +15,7 @@ class MaterialInline(admin.TabularInline):
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ["title", "is_published", "created_at"]
+    list_display = ["title", "price", "is_published", "created_at"]
     list_filter = ["is_published"]
     search_fields = ["title"]
     inlines = [LevelInline]
@@ -30,3 +30,10 @@ class LessonAdmin(admin.ModelAdmin):
 
 admin.site.register(Level)
 admin.site.register(Category)
+
+
+@admin.register(LibraryItem)
+class LibraryItemAdmin(admin.ModelAdmin):
+    list_display = ["title", "kind", "uploaded_at"]
+    list_filter = ["kind"]
+    search_fields = ["title"]

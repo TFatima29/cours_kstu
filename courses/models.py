@@ -41,6 +41,10 @@ class Course(models.Model):
         blank=True,
         validators=[FileExtensionValidator(["jpg", "jpeg", "png", "webp"])],
     )
+    price = models.DecimalField(
+        "цена, сом", max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)],
+        help_text="0 — бесплатно. Оплаты на сайте нет: доступ выдаёт администратор.",
+    )
     is_published = models.BooleanField("опубликован", default=False)
     created_at = models.DateTimeField("создан", auto_now_add=True)
     updated_at = models.DateTimeField("изменён", auto_now=True)
@@ -59,6 +63,10 @@ class Course(models.Model):
     @property
     def lessons_count(self):
         return Lesson.objects.filter(level__course=self).count()
+
+    @property
+    def is_free(self):
+        return not self.price
 
 
 class Level(models.Model):
@@ -93,6 +101,44 @@ class Level(models.Model):
         )
 
 
+class LibraryItem(models.Model):
+    """Материал из общей библиотеки администратора: видео или файл, который подключается к урокам."""
+
+    class Kind(models.TextChoices):
+        VIDEO = "video", "Видео"
+        FILE = "file", "Файл"
+
+    title = models.CharField("название", max_length=200)
+    kind = models.CharField("тип", max_length=10, choices=Kind.choices, editable=False, default=Kind.FILE)
+    file = models.FileField(
+        "файл",
+        upload_to="library/",
+        validators=[FileExtensionValidator(VIDEO_EXTENSIONS + MATERIAL_EXTENSIONS)],
+    )
+    description = models.TextField("описание", blank=True)
+    uploaded_at = models.DateTimeField("загружен", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "материал библиотеки"
+        verbose_name_plural = "библиотека материалов"
+        ordering = ["-uploaded_at"]
+
+    def __str__(self):
+        return self.title
+
+    def save(self, *args, **kwargs):
+        self.kind = self.Kind.VIDEO if self.extension in VIDEO_EXTENSIONS else self.Kind.FILE
+        super().save(*args, **kwargs)
+
+    @property
+    def filename(self):
+        return self.file.name.rsplit("/", 1)[-1]
+
+    @property
+    def extension(self):
+        return self.filename.rsplit(".", 1)[-1].lower() if "." in self.filename else ""
+
+
 YOUTUBE_RE = re.compile(r"(?:youtube\.com/(?:watch\?v=|embed/|shorts/)|youtu\.be/)([A-Za-z0-9_-]{11})")
 
 
@@ -108,6 +154,18 @@ class Lesson(models.Model):
         validators=[FileExtensionValidator(VIDEO_EXTENSIONS)],
     )
     video_url = models.URLField("видео (ссылка)", blank=True, help_text="YouTube или прямая ссылка на mp4")
+    library_video = models.ForeignKey(
+        LibraryItem,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="video_lessons",
+        limit_choices_to={"kind": "video"},
+        verbose_name="видео из библиотеки",
+    )
+    library_materials = models.ManyToManyField(
+        LibraryItem, blank=True, related_name="material_lessons", verbose_name="материалы из библиотеки"
+    )
 
     class Meta:
         verbose_name = "урок"
@@ -132,8 +190,17 @@ class Lesson(models.Model):
         return m.group(1) if m else None
 
     @property
+    def video_source(self):
+        """Загруженный файл урока или видео из библиотеки."""
+        if self.video_file:
+            return self.video_file
+        if self.library_video_id and self.library_video.file:
+            return self.library_video.file
+        return None
+
+    @property
     def has_video(self):
-        return bool(self.video_file or self.video_url)
+        return bool(self.video_file or self.video_url or self.library_video_id)
 
 
 class Material(models.Model):

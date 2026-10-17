@@ -11,6 +11,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 
 from courses.models import Category, Course, Lesson, Level, Material
+from learning.models import Enrollment
 from quizzes.models import Choice, Question
 
 DEMO_DIR = Path(settings.BASE_DIR) / "demo"
@@ -163,13 +164,13 @@ class Command(BaseCommand):
         User = get_user_model()
         admin, created = User.objects.get_or_create(
             email="admin@courseplatform.local",
-            defaults={"full_name": "Администратор платформы", "is_staff": True, "is_superuser": True},
+            defaults={"full_name": "Администратор платформы", "login": "admin", "is_staff": True, "is_superuser": True},
         )
         if created:
             admin.set_password("admin12345")
             admin.save()
         student, created = User.objects.get_or_create(
-            email="student@courseplatform.local", defaults={"full_name": "Айгерим Садыкова"}
+            email="student@courseplatform.local", defaults={"full_name": "Айгерим Садыкова", "login": "student"}
         )
         if created:
             student.set_password("student12345")
@@ -177,7 +178,7 @@ class Command(BaseCommand):
 
         video = DEMO_DIR / "demo_lesson.mp4"
         pdf = DEMO_DIR / "konspekt.pdf"
-        for spec in COURSES:
+        for index, spec in enumerate(COURSES):
             if Course.objects.filter(title=spec["title"]).exists():
                 continue
             category, _ = Category.objects.get_or_create(name=spec["category"])
@@ -187,8 +188,11 @@ class Command(BaseCommand):
                 difficulty=spec["difficulty"],
                 short_description=spec["short"],
                 description=spec["description"],
+                price=index * 1500,
                 is_published=True,
             )
+            if index < 2:  # доступ выдаёт администратор: демо-студенту открыты первые два курса
+                Enrollment.objects.get_or_create(user=student, course=course)
             for li, lv in enumerate(spec["levels"], start=1):
                 level = Level.objects.create(course=course, title=lv["title"], order=li)
                 for i, title in enumerate(lv["lessons"], start=1):
@@ -212,5 +216,5 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"Курс «{course.title}» создан"))
 
         self.stdout.write(self.style.SUCCESS("Готово."))
-        self.stdout.write("Администратор: admin@courseplatform.local / admin12345")
-        self.stdout.write("Обучающийся:   student@courseplatform.local / student12345")
+        self.stdout.write("Администратор: admin (или admin@courseplatform.local) / admin12345")
+        self.stdout.write("Обучающийся:   student (или student@courseplatform.local) / student12345")
