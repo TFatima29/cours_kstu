@@ -134,7 +134,7 @@ class LearningFlowTests(TestCase):
     def test_lesson_requires_enrollment(self):
         lesson = self.level1.lessons.first()
         r = self.client.get(reverse("courses:lesson", args=[lesson.pk]))
-        self.assertRedirects(r, reverse("learning:my_courses"))
+        self.assertRedirects(r, self.course.get_absolute_url())
 
     def test_second_level_locked_until_quiz_passed(self):
         self.enroll()

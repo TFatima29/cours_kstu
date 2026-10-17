@@ -39,10 +39,14 @@ class StudentsAdminTests(TestCase):
         self.client.logout()
         r = self.client.post(reverse("accounts:login"), {"username": "nurgul.a", "password": password})
         self.assertRedirects(r, reverse("learning:my_courses"), fetch_redirect_response=False)
+        # в каталоге видны все курсы, но открыть можно только выданный
         r = self.client.get(reverse("courses:catalog"))
         self.assertContains(r, "Тестовый курс")
-        self.assertNotContains(r, "Другой курс")
-        self.assertRedirects(self.client.get(self.other.get_absolute_url()), reverse("learning:my_courses"))
+        self.assertContains(r, "Другой курс")
+        self.assertContains(self.client.get(self.other.get_absolute_url()), "Нет доступа к курсу")
+        self.assertContains(self.client.get(self.course.get_absolute_url()), "Начать первый урок")
+        other_lesson = make_course(levels=1, lessons=1, questions=0).levels.get().lessons.get()
+        self.assertRedirects(self.client.get(other_lesson.get_absolute_url()), other_lesson.course.get_absolute_url())
         # самостоятельной записи нет
         self.client.post(reverse("courses:enroll", args=[self.other.pk]))
         self.assertFalse(Enrollment.objects.filter(user=user, course=self.other).exists())

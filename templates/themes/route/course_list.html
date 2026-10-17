@@ -10,7 +10,7 @@
           <span>Уровней: {{ course.levels_total }}</span>
           <span>Уроков: {{ course.lessons_total }}</span>
           <span>{% if course.is_free %}Бесплатно{% else %}{{ course.price|floatformat:"-2" }} сом{% endif %}</span>
-          {% if course.pk in enrolled_ids %}<span class="badge ok">Вы записаны</span>{% endif %}
+          {% if course.pk in enrolled_ids %}<span class="badge ok">Доступ открыт</span>{% endif %}
         </div>
       </div>
     </a>

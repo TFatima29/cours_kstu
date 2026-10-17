@@ -2,7 +2,7 @@
 {% block title %}Мои курсы{% endblock %}
 {% block content %}
 <div class="wrap page">
-  <div class="page-head"><h1>Мои курсы</h1><a class="btn btn-secondary" href="{% url 'quizzes:my_tests' %}">Мои тесты</a></div>
+  <div class="page-head"><h1>Мои курсы</h1><div class="actions"><a class="btn btn-secondary" href="{% url 'courses:catalog' %}">Все курсы</a><a class="btn btn-secondary" href="{% url 'quizzes:my_tests' %}">Мои тесты</a></div></div>
   {% for s in items %}
     <article class="my-course">
       <a class="thumb" href="{{ s.course.get_absolute_url }}" tabindex="-1">{% include "partials/cover.html" with course=s.course %}</a>

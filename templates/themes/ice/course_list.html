@@ -14,7 +14,7 @@
         <span>{{ course.get_difficulty_display }}</span>
         <span>{{ course.levels_total }} ур.</span>
         <span>{{ course.lessons_total }} видео</span>
-        {% if course.pk in enrolled_ids %}<span class="on">вы записаны</span>{% endif %}
+        {% if course.pk in enrolled_ids %}<span class="on">доступ открыт</span>{% endif %}
       </div>
     </a>
   {% endfor %}

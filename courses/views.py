@@ -19,25 +19,16 @@ def visible_courses(user):
     return qs
 
 
-def accessible_courses(user):
-    """Опубликованные курсы, видимые пользователю.
-
-    Оплаты на сайте нет: обучающийся видит только курсы, к которым администратор выдал доступ.
-    Гость видит витрину всех опубликованных курсов с ценами.
-    """
-    qs = Course.objects.filter(is_published=True)
-    if user.is_authenticated and not user.is_staff:
-        qs = qs.filter(enrollments__user=user)
-    return qs
-
-
 @learner_only
 def catalog(request):
-    """Ф-4. Каталог курсов с поиском по названию."""
+    """Ф-4. Каталог всех опубликованных курсов с ценами.
+
+    Оплаты на сайте нет: видны все курсы, а открыть уроки можно только тех, к которым доступ выдал администратор.
+    """
     query = request.GET.get("q", "").strip()
     category = request.GET.get("category", "")
     difficulty = request.GET.get("level", "")
-    base = accessible_courses(request.user)
+    base = Course.objects.filter(is_published=True)
     courses = (
         base
         .select_related("category")
@@ -83,9 +74,6 @@ def course_detail(request, pk):
     """Ф-5. Карточка курса: описание, уровни и уроки, кнопка «Записаться»."""
     course = get_object_or_404(visible_courses(request.user), pk=pk)
     state = build_course_state(request.user, course)
-    if request.user.is_authenticated and not request.user.is_staff and not state.enrollment:
-        messages.info(request, "У вас нет доступа к этому курсу. Его выдаёт администратор платформы.")
-        return redirect("learning:my_courses")
     return render(
         request,
         "courses/course_detail.html",
@@ -111,7 +99,7 @@ def lesson_detail(request, pk):
         raise Http404
     if not request.user.is_staff and not get_enrollment(request.user, course):
         messages.info(request, "У вас нет доступа к этому курсу. Его выдаёт администратор.")
-        return redirect("learning:my_courses")
+        return redirect(course.get_absolute_url())
     state = build_course_state(request.user, course)
     level_state = state.state_for_level(lesson.level_id)
     if not request.user.is_staff and not level_state.unlocked:
