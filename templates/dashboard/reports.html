@@ -1,0 +1,25 @@
+{% extends "dashboard/base_dash.html" %}
+{% block title %}Отчёт по студентам{% endblock %}
+{% block dash %}
+<div class="page-head"><h1>Отчёт по студентам</h1>
+  <div class="actions">
+    <a class="btn btn-primary" href="{% url 'dashboard:report_excel' %}{% if course %}?course={{ course.pk }}{% endif %}">Скачать Excel</a>
+    <a class="btn btn-secondary" href="{% url 'dashboard:report_pdf' %}{% if course %}?course={{ course.pk }}{% endif %}">Скачать PDF</a>
+  </div>
+</div>
+<form method="get" class="actions" style="margin-bottom:20px">
+  <label for="rc">Курс</label>
+  <select id="rc" name="course" style="max-width:360px">
+    <option value="">Все студенты</option>
+    {% for c in courses %}<option value="{{ c.pk }}" {% if course and course.pk == c.pk %}selected{% endif %}>{{ c.title }}</option>{% endfor %}
+  </select>
+  <button class="btn btn-secondary" type="submit">Показать</button>
+</form>
+<p class="muted small">Прогресс — средний по доступным курсам (или по выбранному курсу). Средний балл — по лучшим попыткам каждого теста.</p>
+<div class="table-wrap"><table>
+  <thead><tr>{% for c in columns %}<th>{{ c }}</th>{% endfor %}</tr></thead>
+  <tbody>{% for row in rows %}
+    <tr>{% for v in row %}<td>{{ v }}</td>{% endfor %}</tr>
+  {% empty %}<tr><td colspan="{{ columns|length }}" class="muted">Студентов нет.</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endblock %}

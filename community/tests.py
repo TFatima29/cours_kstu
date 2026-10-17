@@ -4,7 +4,7 @@ from django.urls import reverse
 
 from community.models import Comment, Notification
 from courses.models import Category, Course
-from learning.models import Certificate
+from learning.models import Certificate, Enrollment
 from learning.tests import answers, make_course
 
 User = get_user_model()
@@ -20,7 +20,7 @@ class CommunityTests(TestCase):
 
     def enroll(self, user):
         self.client.force_login(user)
-        self.client.post(reverse("courses:enroll", args=[self.course.pk]))
+        Enrollment.objects.get_or_create(user=user, course=self.course)
 
     def test_comment_requires_enrollment(self):
         self.client.force_login(self.user)

@@ -15,8 +15,9 @@
       {% include "partials/field.html" with field=form.description full=1 %}
     </div>
     <h2>Видео</h2>
-    <p class="small muted">Загрузите файл (mp4, webm, mov, до 500 МБ) или вставьте ссылку на YouTube. Урок засчитывается после просмотра 90% видео.</p>
+    <p class="small muted">Выберите видео из раздела <a href="{% url 'dashboard:library' %}">«Материалы»</a>, загрузите файл (mp4, webm, mov, до 500 МБ) или вставьте ссылку на YouTube. Урок засчитывается после просмотра 90% видео.</p>
     <div class="form-grid">
+      {% include "partials/field.html" with field=form.library_video full=1 %}
       {% include "partials/field.html" with field=form.video_file %}
       {% include "partials/field.html" with field=form.video_url %}
     </div>
@@ -24,6 +25,13 @@
 
   <div class="panel">
     <h2>Материалы</h2>
+    <h3 style="margin-top:0">Из библиотеки</h3>
+    {% if form.library_materials.field.queryset.exists %}
+      <div class="check-list">{{ form.library_materials }}</div>
+    {% else %}
+      <p class="small muted">В библиотеке пока нет файлов. Добавьте их в разделе <a href="{% url 'dashboard:library' %}">«Материалы»</a>.</p>
+    {% endif %}
+    <h3>Загрузить к этому уроку</h3>
     <p class="small muted">PDF, презентации, документы, аудио, архивы — до 50 МБ каждый.</p>
     {{ formset.management_form }}
     {{ formset.non_form_errors }}

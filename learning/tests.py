@@ -111,7 +111,8 @@ class LearningFlowTests(TestCase):
         self.level1, self.level2 = self.course.levels.all()
 
     def enroll(self):
-        self.client.post(reverse("courses:enroll", args=[self.course.pk]))
+        # доступ к курсу выдаёт администратор
+        Enrollment.objects.get_or_create(user=self.user, course=self.course)
 
     def watch_level(self, level):
         for lesson in level.lessons.all():
@@ -126,13 +127,14 @@ class LearningFlowTests(TestCase):
         self.assertNotContains(r, "Скрытый")
 
     def test_catalog_search_cyrillic_case_insensitive(self):
+        self.enroll()
         r = self.client.get(reverse("courses:catalog"), {"q": "ТЕСТОВЫЙ"})
         self.assertContains(r, "Тестовый курс")
 
     def test_lesson_requires_enrollment(self):
         lesson = self.level1.lessons.first()
         r = self.client.get(reverse("courses:lesson", args=[lesson.pk]))
-        self.assertRedirects(r, self.course.get_absolute_url())
+        self.assertRedirects(r, reverse("learning:my_courses"))
 
     def test_second_level_locked_until_quiz_passed(self):
         self.enroll()
@@ -196,7 +198,7 @@ class LearningFlowTests(TestCase):
 
     def test_level_without_quiz_completes_after_lessons(self):
         course = make_course(levels=2, lessons=1, questions=0)
-        self.client.post(reverse("courses:enroll", args=[course.pk]))
+        Enrollment.objects.create(user=self.user, course=course)
         first, second = course.levels.all()
         self.watch_level(first)
         self.assertTrue(build_course_state(self.user, course).levels[1].unlocked)
@@ -293,7 +295,8 @@ class RoleInterfaceTests(TestCase):
         r = self.client.get(reverse("dashboard:index"))
         self.assertNotContains(r, "Мои курсы")
         self.assertNotContains(r, "Мой прогресс")
-        self.assertContains(r, "Пользователи")
+        self.assertContains(r, "Студенты")
+        self.assertContains(r, "Материалы")
 
     def test_admin_can_preview_course(self):
         self.client.force_login(self.admin)

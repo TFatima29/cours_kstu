@@ -1,0 +1,23 @@
+{% extends "dashboard/base_dash.html" %}
+{% block title %}Изменить: {{ target.full_name }}{% endblock %}
+{% block dash %}
+<p class="crumbs"><a href="{% url 'dashboard:user_list' %}">Студенты</a> / <a href="{% url 'dashboard:user_detail' target.pk %}">{{ target.full_name }}</a></p>
+<div class="page-head"><h1>Изменить данные</h1></div>
+<form method="post" class="panel" style="max-width:640px" novalidate>
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  {% include "partials/field.html" with field=form.full_name %}
+  {% include "partials/field.html" with field=form.email %}
+  {% include "partials/field.html" with field=form.login %}
+  {% include "partials/field.html" with field=form.is_active %}
+  {% include "partials/field.html" with field=form.is_staff %}
+  <h2 style="margin-top:24px">Пароль</h2>
+  {% include "partials/field.html" with field=form.new_password %}
+  {% include "partials/field.html" with field=form.generate_password %}
+  {% include "partials/field.html" with field=form.send_email %}
+  <div class="actions">
+    <button class="btn btn-primary" type="submit">Сохранить</button>
+    <a class="btn btn-ghost" href="{% url 'dashboard:user_detail' target.pk %}">Отмена</a>
+  </div>
+</form>
+{% endblock %}

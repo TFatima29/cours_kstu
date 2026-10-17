@@ -1,13 +1,20 @@
 {% extends "dashboard/base_dash.html" %}
-{% block title %}Новый пользователь{% endblock %}
+{% block title %}Новый студент{% endblock %}
 {% block dash %}
-<p class="crumbs"><a href="{% url 'dashboard:user_list' %}">Пользователи</a></p>
-<div class="page-head"><h1>Новый пользователь</h1></div>
+<p class="crumbs"><a href="{% url 'dashboard:user_list' %}">Студенты</a></p>
+<div class="page-head"><h1>Новый студент</h1></div>
 <form method="post" class="panel" style="max-width:560px" novalidate>
   {% csrf_token %}
-  <p class="muted">Пароль сгенерируется автоматически. Логин (e-mail) и пароль придут пользователю на почту, а вы увидите их на следующей странице.</p>
+  <p class="muted">Логин и пароль сгенерируются автоматически и придут на указанный e-mail. Вы тоже увидите их на следующей странице.</p>
   {% include "partials/field.html" with field=form.full_name %}
   {% include "partials/field.html" with field=form.email %}
+  {% include "partials/field.html" with field=form.login %}
+  <div class="field{% if form.courses.errors %} has-error{% endif %}">
+    <label>{{ form.courses.label }}</label>
+    {% if form.courses.field.queryset.exists %}<div class="check-list">{{ form.courses }}</div>{% else %}<p class="small muted">Курсов пока нет.</p>{% endif %}
+    <div class="help">{{ form.courses.help_text }}</div>
+    {{ form.courses.errors }}
+  </div>
   {% include "partials/field.html" with field=form.is_staff %}
   <div class="actions">
     <button class="btn btn-primary" type="submit">Создать и отправить доступ</button>

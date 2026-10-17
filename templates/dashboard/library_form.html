@@ -1,0 +1,28 @@
+{% extends "dashboard/base_dash.html" %}
+{% block title %}{% if item %}{{ item.title }}{% else %}Новый материал{% endif %}{% endblock %}
+{% block dash %}
+<p class="crumbs"><a href="{% url 'dashboard:library' %}">Материалы</a></p>
+<div class="page-head"><h1>{% if item %}{{ item.title }}{% else %}Новый материал{% endif %}</h1></div>
+<form method="post" enctype="multipart/form-data" class="panel" style="max-width:640px" novalidate>
+  {% csrf_token %}
+  <p class="small muted">Видео: mp4, webm, mov, m4v — до 500 МБ. Файлы: PDF, презентации, документы, таблицы, аудио, архивы — до 50 МБ.</p>
+  {% include "partials/field.html" with field=form.title %}
+  {% if item %}<p class="small">Текущий файл: <a href="{{ item.file.url }}">{{ item.filename }}</a> ({{ item.get_kind_display|lower }})</p>{% endif %}
+  {% include "partials/field.html" with field=form.file %}
+  {% include "partials/field.html" with field=form.description %}
+  <div class="actions">
+    <button class="btn btn-primary" type="submit">Сохранить</button>
+    {% if item %}<a class="btn btn-ghost" href="{% url 'dashboard:library_delete' item.pk %}">Удалить</a>{% endif %}
+    <a class="btn btn-ghost" href="{% url 'dashboard:library' %}">Отмена</a>
+  </div>
+</form>
+{% if item %}
+<section class="panel" style="max-width:640px">
+  <h2>Используется в уроках</h2>
+  <ul class="list-plain">
+    {% for l in lessons %}<li><div class="grow"><a href="{% url 'dashboard:lesson_edit' l.pk %}">{{ l.title }}</a><div class="small muted">{{ l.level.course.title }} / {{ l.level.title }}</div></div></li>
+    {% empty %}<li class="muted">Пока ни в одном. Подключите материал на странице урока.</li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

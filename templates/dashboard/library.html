@@ -1,0 +1,30 @@
+{% extends "dashboard/base_dash.html" %}
+{% block title %}Материалы{% endblock %}
+{% block dash %}
+<div class="page-head"><h1>Материалы</h1><a class="btn btn-primary" href="{% url 'dashboard:library_create' %}">Добавить материал</a></div>
+<p class="muted">Общая библиотека видео и файлов. Загрузите материал один раз и подключайте его к любым урокам на странице урока.</p>
+<nav class="filters" aria-label="Тип материала">
+  <a class="chip" href="{% url 'dashboard:library' %}" {% if not kind %}aria-current="true"{% endif %}>Все</a>
+  {% for key, label in kinds %}<a class="chip" href="?kind={{ key }}" {% if kind == key %}aria-current="true"{% endif %}>{{ label }}</a>{% endfor %}
+</nav>
+{% if items %}
+<div class="table-wrap"><table>
+  <thead><tr><th>Название</th><th>Тип</th><th>Файл</th><th class="num">В уроках</th><th>Загружен</th><th></th></tr></thead>
+  <tbody>{% for m in items %}
+    <tr>
+      <td><a href="{% url 'dashboard:library_edit' m.pk %}"><strong>{{ m.title }}</strong></a>{% if m.description %}<div class="small muted">{{ m.description|truncatechars:90 }}</div>{% endif %}</td>
+      <td><span class="badge{% if m.kind == 'video' %} mark{% endif %}">{{ m.get_kind_display }}</span></td>
+      <td class="small"><a href="{{ m.file.url }}">{{ m.filename }}</a></td>
+      <td class="num">{{ m.video_total|add:m.files_total }}</td>
+      <td>{{ m.uploaded_at|date:"d.m.Y" }}</td>
+      <td><div class="row-actions">
+        <a class="btn btn-ghost btn-sm" href="{% url 'dashboard:library_edit' m.pk %}">Изменить</a>
+        <a class="btn btn-ghost btn-sm" href="{% url 'dashboard:library_delete' m.pk %}">Удалить</a>
+      </div></td>
+    </tr>
+  {% endfor %}</tbody>
+</table></div>
+{% else %}
+<div class="empty"><h2>Материалов пока нет</h2><p>Загрузите видео, PDF, презентации или документы — потом их можно подключить к урокам.</p><a class="btn btn-primary" href="{% url 'dashboard:library_create' %}">Добавить материал</a></div>
+{% endif %}
+{% endblock %}

@@ -1,16 +1,17 @@
 {% extends "dashboard/base_dash.html" %}
-{% block title %}Пользователи{% endblock %}
+{% block title %}Студенты{% endblock %}
 {% block dash %}
-<div class="page-head"><h1>Пользователи</h1><a class="btn btn-primary" href="{% url 'dashboard:user_create' %}">Добавить пользователя</a></div>
+<div class="page-head"><h1>Студенты</h1><div class="actions"><a class="btn btn-secondary" href="{% url 'dashboard:reports' %}">Отчёт PDF / Excel</a><a class="btn btn-primary" href="{% url 'dashboard:user_create' %}">Добавить студента</a></div></div>
 <form method="get" class="actions" style="margin-bottom:20px">
   <label class="visually-hidden" for="uq">Поиск</label>
-  <input type="search" id="uq" name="q" value="{{ query }}" placeholder="Имя или e-mail" style="max-width:320px">
+  <input type="search" id="uq" name="q" value="{{ query }}" placeholder="Имя, логин или e-mail" style="max-width:320px">
   <label class="visually-hidden" for="ust">Статус</label>
   <select id="ust" name="status" style="max-width:200px">
-    <option value="">Все</option>
+    <option value="">Студенты</option>
     <option value="active" {% if status == 'active' %}selected{% endif %}>Активные</option>
     <option value="blocked" {% if status == 'blocked' %}selected{% endif %}>Заблокированные</option>
     <option value="staff" {% if status == 'staff' %}selected{% endif %}>Администраторы</option>
+    <option value="all" {% if status == 'all' %}selected{% endif %}>Все пользователи</option>
   </select>
   <button class="btn btn-secondary" type="submit">Показать</button>
 </form>
@@ -19,12 +20,13 @@
   <tbody>
   {% for u in page %}
     <tr>
-      <td><div style="display:flex;gap:10px;align-items:center">{% include "partials/avatar.html" %}<div><a href="{% url 'dashboard:user_detail' u.pk %}">{{ u.full_name }}</a><div class="small muted">{{ u.email }}</div></div></div></td>
+      <td><div style="display:flex;gap:10px;align-items:center">{% include "partials/avatar.html" %}<div><a href="{% url 'dashboard:user_detail' u.pk %}">{{ u.full_name }}</a><div class="small muted">{% if u.login %}{{ u.login }}, {% endif %}{{ u.email }}</div></div></div></td>
       <td>{{ u.date_joined|date:"d.m.Y" }}</td>
       <td class="num">{{ u.courses_total }}</td>
       <td>{% if u.is_staff %}<span class="badge mark">администратор</span>{% endif %} {% if u.is_active %}<span class="badge ok">активен</span>{% else %}<span class="badge danger">заблокирован</span>{% endif %}</td>
       <td><div class="row-actions">
-        <a class="btn btn-ghost btn-sm" href="{% url 'dashboard:user_detail' u.pk %}">Прогресс</a>
+        <a class="btn btn-ghost btn-sm" href="{% url 'dashboard:user_detail' u.pk %}">Открыть</a>
+        <a class="btn btn-ghost btn-sm" href="{% url 'dashboard:user_edit' u.pk %}">Изменить</a>
         {% if u != user and not u.is_superuser %}
           <form method="post" action="{% url 'dashboard:user_block' u.pk %}" class="inline-form" {% if u.is_active %}data-confirm="Заблокировать {{ u.full_name }}? Пользователь не сможет войти."{% endif %}>{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-secondary btn-sm" type="submit">{% if u.is_active %}Заблокировать{% else %}Разблокировать{% endif %}</button></form>
         {% endif %}

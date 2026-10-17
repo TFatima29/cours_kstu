@@ -4,12 +4,12 @@
 <div class="page-head"><h1>Курсы</h1><a class="btn btn-primary" href="{% url 'dashboard:course_create' %}">Создать курс</a></div>
 {% if courses %}
 <div class="table-wrap"><table>
-  <thead><tr><th>Курс</th><th class="num">Уровни</th><th class="num">Уроки</th><th class="num">Учатся</th><th>Статус</th><th></th></tr></thead>
+  <thead><tr><th>Курс</th><th class="num">Уровни</th><th class="num">Уроки</th><th class="num">Цена</th><th class="num">Учатся</th><th>Статус</th><th></th></tr></thead>
   <tbody>
   {% for c in courses %}
     <tr>
       <td><a href="{% url 'dashboard:course_edit' c.pk %}"><strong>{{ c.title }}</strong></a></td>
-      <td class="num">{{ c.levels_total }}</td><td class="num">{{ c.lessons_total }}</td><td class="num">{{ c.students }}</td>
+      <td class="num">{{ c.levels_total }}</td><td class="num">{{ c.lessons_total }}</td><td class="num">{% if c.is_free %}бесплатно{% else %}{{ c.price|floatformat:"-2" }} сом{% endif %}</td><td class="num">{{ c.students }}</td>
       <td>{% if c.is_published %}<span class="badge ok">опубликован</span>{% else %}<span class="badge">скрыт</span>{% endif %}</td>
       <td><div class="row-actions">
         <form method="post" action="{% url 'dashboard:course_publish' c.pk %}" class="inline-form">{% csrf_token %}<button class="btn btn-secondary btn-sm" type="submit">{% if c.is_published %}Скрыть{% else %}Опубликовать{% endif %}</button></form>

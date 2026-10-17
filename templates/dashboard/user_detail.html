@@ -1,13 +1,15 @@
 {% extends "dashboard/base_dash.html" %}
 {% block title %}{{ target.full_name }}{% endblock %}
 {% block dash %}
-<p class="crumbs"><a href="{% url 'dashboard:user_list' %}">Пользователи</a></p>
+<p class="crumbs"><a href="{% url 'dashboard:user_list' %}">Студенты</a></p>
 <div class="page-head">
-  <div style="display:flex;gap:16px;align-items:center">{% include "partials/avatar.html" with u=target size="lg" %}<div><h1 style="margin:0">{{ target.full_name }}</h1><div class="muted">{{ target.email }}, с {{ target.date_joined|date:"d.m.Y" }}</div></div></div>
+  <div style="display:flex;gap:16px;align-items:center">{% include "partials/avatar.html" with u=target size="lg" %}<div><h1 style="margin:0">{{ target.full_name }}</h1><div class="muted">{% if target.login %}Логин: {{ target.login }}, {% endif %}{{ target.email }}, с {{ target.date_joined|date:"d.m.Y" }}</div></div></div>
   <div class="actions">
+  <a class="btn btn-secondary" href="{% url 'dashboard:user_edit' target.pk %}">Изменить данные</a>
   <form method="post" action="{% url 'dashboard:user_reset_password' target.pk %}" data-confirm="Сгенерировать новый пароль и отправить его на {{ target.email }}?">{% csrf_token %}<button class="btn btn-secondary" type="submit">Выдать новый пароль</button></form>
   {% if target != user and not target.is_superuser %}
-    <form method="post" action="{% url 'dashboard:user_block' target.pk %}" {% if target.is_active %}data-confirm="Заблокировать пользователя?"{% endif %}>{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button class="btn {% if target.is_active %}btn-secondary{% else %}btn-primary{% endif %}" type="submit">{% if target.is_active %}Заблокировать{% else %}Разблокировать{% endif %}</button></form>
+    <form method="post" action="{% url 'dashboard:user_block' target.pk %}" {% if target.is_active %}data-confirm="Заблокировать пользователя?"{% endif %}>{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button class="btn {% if target.is_active %}btn-secondary{% else %}btn-primary{% endif %}" type="submit">{% if target.is_active %}Заблокировать{% else %}Активировать{% endif %}</button></form>
+    <a class="btn btn-ghost" href="{% url 'dashboard:user_delete' target.pk %}">Удалить</a>
   {% endif %}
   </div>
 </div>
@@ -15,10 +17,22 @@
   <div class="panel" style="margin-bottom:20px">
     <h2 style="margin-bottom:6px">Данные для входа</h2>
     <p class="muted small">Показываются один раз. Если письмо не дошло, передайте их пользователю сами.</p>
-    <p style="margin:0">Логин: <strong>{{ issued.email }}</strong><br>Пароль: <strong style="font-size:1.15em">{{ issued.password }}</strong></p>
+    <p style="margin:0">Логин: <strong>{{ issued.login|default:issued.email }}</strong><br>E-mail: <strong>{{ issued.email }}</strong><br>Пароль: <strong style="font-size:1.15em">{{ issued.password }}</strong></p>
   </div>
 {% endif %}
 {% if not target.is_active %}<div class="flash error" style="margin-bottom:20px">Пользователь заблокирован и не может войти.</div>{% endif %}
+
+{% if not target.is_staff %}
+<section class="panel">
+  <h2>Доступ к курсам</h2>
+  <p class="muted small">Оплаты на сайте нет: отметьте курсы, которые студент купил. Он увидит только их. Если снять отметку, доступ закроется, а запись о прохождении курса удалится.</p>
+  <form method="post" action="{% url 'dashboard:user_access' target.pk %}">
+    {% csrf_token %}
+    {% if access_form.courses.field.queryset.exists %}<div class="check-list">{{ access_form.courses }}</div>{% else %}<p class="muted">Курсов пока нет.</p>{% endif %}
+    <button class="btn btn-primary" type="submit" style="margin-top:12px">Сохранить доступ</button>
+  </form>
+</section>
+{% endif %}
 
 <h2>Прогресс по курсам</h2>
 {% for s in items %}
@@ -35,7 +49,7 @@
     </table></div>
   </section>
 {% empty %}
-  <p class="muted">Пользователь не записан ни на один курс.</p>
+  <p class="muted">Студенту пока не открыт ни один курс.</p>
 {% endfor %}
 
 <h2 style="margin-top:32px">Попытки тестов</h2>

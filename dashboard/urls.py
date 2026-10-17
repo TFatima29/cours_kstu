@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import reports, views
 
 app_name = "dashboard"
 
@@ -26,4 +26,14 @@ urlpatterns = [
     path("users/<int:pk>/password/", views.user_reset_password, name="user_reset_password"),
     path("users/<int:pk>/", views.user_detail, name="user_detail"),
     path("users/<int:pk>/block/", views.user_toggle_block, name="user_block"),
+    path("users/<int:pk>/edit/", views.user_edit, name="user_edit"),
+    path("users/<int:pk>/delete/", views.user_delete, name="user_delete"),
+    path("users/<int:pk>/access/", views.user_access, name="user_access"),
+    path("library/", views.library, name="library"),
+    path("library/new/", views.library_form, name="library_create"),
+    path("library/<int:pk>/", views.library_form, name="library_edit"),
+    path("library/<int:pk>/delete/", views.library_delete, name="library_delete"),
+    path("reports/", reports.report_page, name="reports"),
+    path("reports/students.xlsx", reports.report_excel, name="report_excel"),
+    path("reports/students.pdf", reports.report_pdf, name="report_pdf"),
 ]
