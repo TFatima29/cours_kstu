@@ -1,15 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 {% with url=request.resolver_match.url_name %}
-<div class="wrap dash">
-  <nav class="dash-nav" aria-label="Разделы панели">
-    <a href="{% url 'dashboard:index' %}" {% if url == 'index' %}aria-current="page"{% endif %}>Обзор</a>
-    <span class="group">Обучение</span>
-    <a href="{% url 'dashboard:course_list' %}" {% if url == 'course_list' or url == 'course_edit' or url == 'course_create' or 'level' in url or 'lesson' in url or 'question' in url %}aria-current="page"{% endif %}>Курсы</a>
-    <a href="{% url 'dashboard:categories' %}" {% if url == 'categories' %}aria-current="page"{% endif %}>Категории</a>
-    <span class="group">Люди</span>
-    <a href="{% url 'dashboard:user_list' %}" {% if 'user' in url %}aria-current="page"{% endif %}>Пользователи и прогресс</a>
-  </nav>
+<div class="wrap dash dash-single">
   <div>{% block dash %}{% endblock %}</div>
 </div>
 {% endwith %}

@@ -6,6 +6,7 @@ from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
+from accounts.roles import learner_only
 from learning.models import Enrollment
 from learning.services import build_course_state, get_enrollment, is_lesson_available, mark_lesson_watched
 
@@ -19,6 +20,7 @@ def visible_courses(user):
     return qs
 
 
+@learner_only
 def catalog(request):
     """Ф-4. Каталог опубликованных курсов с поиском по названию."""
     query = request.GET.get("q", "").strip()
@@ -73,6 +75,7 @@ def course_detail(request, pk):
 
 
 @login_required
+@learner_only
 @require_POST
 def enroll(request, pk):
     """Ф-6. Запись на курс без оплаты."""

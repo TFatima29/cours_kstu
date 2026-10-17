@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
+from accounts.roles import learner_only
 from courses.models import Level
 from learning.services import build_course_state, get_enrollment
 
@@ -29,6 +30,7 @@ def _quiz_guard(request, level):
 
 
 @login_required
+@learner_only
 def take_quiz(request, level_id):
     """Ф-9. Тест в конце уровня. Ответы проверяются на сервере."""
     level = get_object_or_404(Level.objects.select_related("course"), pk=level_id, course__is_published=True)

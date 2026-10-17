@@ -19,7 +19,7 @@
   <a class="visually-hidden" href="#content">Перейти к содержимому</a>
   <header class="topbar">
     <div class="wrap">
-      <a class="brand" href="{% url 'courses:catalog' %}">
+      <a class="brand" href="{% if user.is_staff %}{% url 'dashboard:index' %}{% else %}{% url 'courses:catalog' %}{% endif %}">
         <svg class="brand-mark" viewBox="0 0 28 28" aria-hidden="true">
           <path d="M5 23 L14 14 L23 5" stroke="var(--route)" stroke-width="3.5" stroke-linecap="round" fill="none"/>
           <circle cx="5" cy="23" r="4" fill="var(--route)"/>
@@ -30,13 +30,21 @@
       </a>
       {% with url=request.resolver_match.url_name ns=request.resolver_match.namespace %}
       <nav class="nav" id="main-nav" aria-label="Основное меню">
-        <a href="{% url 'courses:catalog' %}" {% if ns == 'courses' and url == 'catalog' %}aria-current="page"{% endif %}>Каталог</a>
-        {% if user.is_authenticated %}
-          <a href="{% url 'learning:my_courses' %}" {% if url == 'my_courses' %}aria-current="page"{% endif %}>Мои курсы</a>
-          <a href="{% url 'learning:progress' %}" {% if url == 'progress' %}aria-current="page"{% endif %}>Мой прогресс</a>
-          {% if user.is_staff %}<a href="{% url 'dashboard:index' %}" {% if ns == 'dashboard' %}aria-current="page"{% endif %}>Панель администратора</a>{% endif %}
+        {% if user.is_staff %}
+          {# администратор: только панель управления #}
+          <a href="{% url 'dashboard:index' %}" {% if ns == 'dashboard' and url == 'index' %}aria-current="page"{% endif %}>Обзор</a>
+          <a href="{% url 'dashboard:course_list' %}" {% if ns == 'dashboard' and url != 'index' and 'user' not in url and url != 'categories' %}aria-current="page"{% endif %}>Курсы</a>
+          <a href="{% url 'dashboard:categories' %}" {% if url == 'categories' %}aria-current="page"{% endif %}>Категории</a>
+          <a href="{% url 'dashboard:user_list' %}" {% if ns == 'dashboard' and 'user' in url %}aria-current="page"{% endif %}>Пользователи</a>
         {% else %}
-          <a class="mobile-only" href="{% url 'accounts:login' %}">Войти</a>
+          {# обучающийся и гость #}
+          <a href="{% url 'courses:catalog' %}" {% if ns == 'courses' and url == 'catalog' %}aria-current="page"{% endif %}>Каталог</a>
+          {% if user.is_authenticated %}
+            <a href="{% url 'learning:my_courses' %}" {% if url == 'my_courses' %}aria-current="page"{% endif %}>Мои курсы</a>
+            <a href="{% url 'learning:progress' %}" {% if url == 'progress' %}aria-current="page"{% endif %}>Мой прогресс</a>
+          {% else %}
+            <a class="mobile-only" href="{% url 'accounts:login' %}">Войти</a>
+          {% endif %}
         {% endif %}
       </nav>
       {% endwith %}
@@ -46,7 +54,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
         </button>
         {% endif %}
-        {% if user.is_authenticated %}
+        {% if user.is_authenticated and not user.is_staff %}
         <a class="icon-btn bell" href="{% url 'community:notifications' %}" aria-label="Уведомления{% if unread_notifications %}: новых {{ unread_notifications }}{% endif %}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
           {% if unread_notifications %}<span class="bell-count">{{ unread_notifications }}</span>{% endif %}
@@ -59,7 +67,7 @@
               <span class="user-name">{{ user.get_short_name }}</span>
             </summary>
             <div class="menu">
-              <div class="small muted" style="padding:8px 12px">{{ user.email }}</div>
+              <div class="small muted" style="padding:8px 12px">{{ user.email }}{% if user.is_staff %}<br>Администратор{% endif %}</div>
               <a href="{% url 'accounts:profile' %}">Профиль</a>
               <a href="{% url 'accounts:password_change' %}">Сменить пароль</a>
               <hr>
@@ -76,6 +84,13 @@
     </div>
   </header>
 
+  {% if user.is_staff and request.resolver_match.namespace == 'courses' %}
+  <div class="preview-bar" role="note"><div class="wrap">
+    <span>Режим просмотра: так страницу видят обучающиеся.</span>
+    {% if course %}<a href="{% url 'dashboard:course_edit' course.pk %}">Редактировать курс</a>{% endif %}
+    <a href="{% url 'dashboard:index' %}">Вернуться в панель</a>
+  </div></div>
+  {% endif %}
   <main id="content">
     {% if messages %}
       <div class="wrap"><div class="flash-list" role="status">

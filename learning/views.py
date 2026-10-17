@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, render
 
+from accounts.roles import learner_only
 from quizzes.models import QuizAttempt
 
 from .models import Certificate
@@ -8,6 +9,7 @@ from .services import build_course_state
 
 
 @login_required
+@learner_only
 def my_courses(request):
     """Ф-6. «Мои курсы» — курсы, на которые записан пользователь."""
     enrollments = request.user.enrollments.select_related("course").all()
@@ -16,6 +18,7 @@ def my_courses(request):
 
 
 @login_required
+@learner_only
 def my_progress(request):
     """Ф-14. Процент прохождения по каждому курсу и результаты тестов."""
     enrollments = request.user.enrollments.select_related("course").all()

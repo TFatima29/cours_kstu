@@ -266,3 +266,43 @@ class DashboardTests(TestCase):
         r = self.client.post(reverse("dashboard:lesson_create", args=[level.pk]), data)
         self.assertEqual(r.status_code, 200)
         self.assertFalse(Lesson.objects.filter(title="Видео").exists())
+
+
+class RoleInterfaceTests(TestCase):
+    """Интерфейс разделён по ролям: администратор работает только в панели."""
+
+    def setUp(self):
+        self.admin = User.objects.create_user("adm@b.kg", "Strong-pass-42", full_name="Админ", is_staff=True)
+        self.student = User.objects.create_user("s@b.kg", "Strong-pass-42", full_name="Студент")
+        self.course = make_course(levels=1, lessons=1, questions=1)
+
+    def test_admin_login_goes_to_dashboard(self):
+        r = self.client.post(reverse("accounts:login"), {"username": "adm@b.kg", "password": "Strong-pass-42"})
+        self.assertRedirects(r, reverse("dashboard:index"))
+
+    def test_student_login_goes_to_my_courses(self):
+        r = self.client.post(reverse("accounts:login"), {"username": "s@b.kg", "password": "Strong-pass-42"})
+        self.assertRedirects(r, reverse("learning:my_courses"))
+
+    def test_admin_has_no_learner_pages(self):
+        self.client.force_login(self.admin)
+        for name in ("courses:catalog", "learning:my_courses", "learning:progress"):
+            self.assertRedirects(self.client.get(reverse(name)), reverse("dashboard:index"))
+        self.client.post(reverse("courses:enroll", args=[self.course.pk]))
+        self.assertFalse(self.course.enrollments.exists())
+        r = self.client.get(reverse("dashboard:index"))
+        self.assertNotContains(r, "Мои курсы")
+        self.assertNotContains(r, "Мой прогресс")
+        self.assertContains(r, "Пользователи")
+
+    def test_admin_can_preview_course(self):
+        self.client.force_login(self.admin)
+        r = self.client.get(self.course.get_absolute_url())
+        self.assertContains(r, "Режим просмотра")
+        self.assertNotContains(r, "Записаться на курс")
+
+    def test_student_menu_has_no_admin_links(self):
+        self.client.force_login(self.student)
+        r = self.client.get(reverse("courses:catalog"))
+        self.assertContains(r, "Мои курсы")
+        self.assertNotContains(r, reverse("dashboard:index"))

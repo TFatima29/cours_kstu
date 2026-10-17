@@ -4,7 +4,7 @@
 <div class="wrap">
   <section class="course-hero">
     <div>
-      <p class="crumbs"><a href="{% url 'courses:catalog' %}">Каталог</a></p>
+      <p class="crumbs">{% if user.is_staff %}<a href="{% url 'dashboard:course_list' %}">Курсы</a>{% else %}<a href="{% url 'courses:catalog' %}">Каталог</a>{% endif %}</p>
       <p class="course-tags">{% if course.category %}<span class="badge">{{ course.category }}</span>{% endif %}<span class="badge">{{ course.get_difficulty_display }}</span></p>
       <h1>{{ course.title }}</h1>
       {% if not course.is_published %}<p><span class="badge danger">Черновик — виден только администраторам</span></p>{% endif %}
@@ -30,6 +30,8 @@
             <a class="btn btn-primary" href="{{ state.next_lesson.get_absolute_url }}">{% if state.percent %}Продолжить обучение{% else %}Начать первый урок{% endif %}</a>
           {% endif %}
         </div>
+      {% elif user.is_staff %}
+        <a class="btn btn-primary" href="{% url 'dashboard:course_edit' course.pk %}">Редактировать курс</a>
       {% elif user.is_authenticated %}
         {% if course.is_published %}
         <form method="post" action="{% url 'courses:enroll' course.pk %}">

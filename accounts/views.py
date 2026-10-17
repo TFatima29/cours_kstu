@@ -15,6 +15,14 @@ class LoginView(auth_views.LoginView):
     template_name = "accounts/login.html"
     redirect_authenticated_user = True
 
+    def get_default_redirect_url(self):
+        # после входа каждая роль попадает на свою стартовую страницу
+        from django.urls import reverse
+
+        from .roles import home_url_name
+
+        return reverse(home_url_name(self.request.user))
+
 
 class LogoutView(auth_views.LogoutView):
     """Ф-2. Выход (только POST-запросом)."""
