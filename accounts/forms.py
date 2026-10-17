@@ -59,21 +59,25 @@ class RegisterForm(forms.ModelForm):
 class LoginForm(AuthenticationForm):
     """Ф-2. Вход по e-mail и паролю. Заблокированным пользователям сообщаем причину."""
 
-    username = forms.EmailField(label="E-mail", widget=forms.EmailInput(attrs={"autofocus": True, "autocomplete": "email"}))
+    username = forms.CharField(
+        label="Логин или e-mail", widget=forms.TextInput(attrs={"autofocus": True, "autocomplete": "username"})
+    )
 
     error_messages = {
-        "invalid_login": "Неверный e-mail или пароль.",
+        "invalid_login": "Неверный логин или пароль.",
         "inactive": "Аккаунт заблокирован администратором.",
     }
 
     def clean(self):
-        email = (self.cleaned_data.get("username") or "").lower()
+        from .backends import find_user
+
+        username = (self.cleaned_data.get("username") or "").strip()
         password = self.cleaned_data.get("password")
-        if email and password:
-            self.user_cache = authenticate(self.request, username=email, password=password)
+        if username and password:
+            self.user_cache = authenticate(self.request, username=username, password=password)
             if self.user_cache is None:
-                blocked = User.objects.filter(email__iexact=email, is_active=False).first()
-                if blocked and blocked.check_password(password):
+                blocked = find_user(username)
+                if blocked and not blocked.is_active and blocked.check_password(password):
                     raise forms.ValidationError(self.error_messages["inactive"], code="inactive")
                 raise self.get_invalid_login_error()
             self.confirm_login_allowed(self.user_cache)

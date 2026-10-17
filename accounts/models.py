@@ -41,6 +41,14 @@ class User(AbstractUser):
 
     username = None
     email = models.EmailField("e-mail", unique=True)
+    login = models.CharField(
+        "логин",
+        max_length=50,
+        unique=True,
+        null=True,
+        blank=True,
+        help_text="Латинские буквы, цифры, точка, дефис и подчёркивание. Входить можно по логину или e-mail.",
+    )
     full_name = models.CharField("имя", max_length=150)
     avatar = models.ImageField(
         "аватар",
