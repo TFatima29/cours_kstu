@@ -17,7 +17,9 @@ from learning.models import Certificate, Enrollment
 from learning.services import build_course_state
 from quizzes.models import Question, QuizAttempt
 
-from .forms import CategoryForm, ChoiceFormSet, CourseForm, LessonForm, LevelForm, MaterialFormSet, QuestionForm
+from accounts.services import generate_password, send_credentials
+
+from .forms import UserCreateForm, CategoryForm, ChoiceFormSet, CourseForm, LessonForm, LevelForm, MaterialFormSet, QuestionForm
 
 User = get_user_model()
 
@@ -286,7 +288,14 @@ def user_detail(request, pk):
     enrollments = target.enrollments.select_related("course")
     items = [build_course_state(target, e.course, e) for e in enrollments]
     attempts = QuizAttempt.objects.filter(user=target).select_related("level__course")[:30]
-    return render(request, "dashboard/user_detail.html", {"target": target, "items": items, "attempts": attempts})
+    issued = request.session.pop("issued_credentials", None)
+    if issued and issued.get("email") != target.email:
+        issued = None
+    return render(
+        request,
+        "dashboard/user_detail.html",
+        {"target": target, "items": items, "attempts": attempts, "issued": issued},
+    )
 
 
 # ---------- Категории курсов ----------
@@ -305,3 +314,40 @@ def categories(request):
             return redirect("dashboard:categories")
     items = Category.objects.annotate(total=Count("courses"))
     return render(request, "dashboard/categories.html", {"form": form, "items": items})
+
+
+# ---------- А-5. Выдача учётных записей ----------
+def _credentials_message(request, user, password, sent):
+    if sent:
+        messages.success(request, f"Логин и пароль отправлены на {user.email}.")
+    else:
+        messages.warning(request, "Письмо не отправилось — почта не настроена.")
+    # пароль показываем один раз, чтобы администратор мог передать его вручную
+    request.session["issued_credentials"] = {"email": user.email, "password": password}
+
+
+@staff_required
+def user_create(request):
+    form = UserCreateForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        password = generate_password()
+        user = form.save(commit=False)
+        user.set_password(password)
+        user.save()
+        _credentials_message(request, user, password, send_credentials(request, user, password, is_new=True))
+        return redirect("dashboard:user_detail", pk=user.pk)
+    return render(request, "dashboard/user_form.html", {"form": form})
+
+
+@staff_required
+@require_POST
+def user_reset_password(request, pk):
+    target = get_object_or_404(User, pk=pk)
+    if target.is_superuser and target != request.user:
+        messages.error(request, "Пароль суперпользователя меняется только им самим.")
+        return redirect("dashboard:user_detail", pk=pk)
+    password = generate_password()
+    target.set_password(password)
+    target.save(update_fields=["password"])
+    _credentials_message(request, target, password, send_credentials(request, target, password, is_new=False))
+    return redirect("dashboard:user_detail", pk=pk)

@@ -122,3 +122,16 @@ git push -u origin feature/nurgul-auth     # затем pull request и пров
 
 Python 3, Django 5, PostgreSQL (SQLite для разработки), шаблоны Django (HTML5, CSS3, JavaScript),
 Docker, Docker Compose, Nginx, Gunicorn.
+
+
+
+
+cd course_platform
+dir manage.py
+
+py -V:3.13 -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py seed_demo
+python manage.py runserver

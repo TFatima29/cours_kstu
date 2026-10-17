@@ -22,6 +22,8 @@ urlpatterns = [
     path("questions/<int:pk>/delete/", views.question_delete, name="question_delete"),
     path("categories/", views.categories, name="categories"),
     path("users/", views.user_list, name="user_list"),
+    path("users/new/", views.user_create, name="user_create"),
+    path("users/<int:pk>/password/", views.user_reset_password, name="user_reset_password"),
     path("users/<int:pk>/", views.user_detail, name="user_detail"),
     path("users/<int:pk>/block/", views.user_toggle_block, name="user_block"),
 ]

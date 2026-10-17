@@ -1,25 +1,11 @@
 from django.contrib import messages
-from django.contrib.auth import login
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 
-from .forms import LoginForm, ProfileForm, RegisterForm
-
-
-def register(request):
-    """Ф-1. Регистрация."""
-    if request.user.is_authenticated:
-        return redirect("learning:my_courses")
-    form = RegisterForm(request.POST or None)
-    if request.method == "POST" and form.is_valid():
-        user = form.save()
-        login(request, user, backend="django.contrib.auth.backends.ModelBackend")
-        messages.success(request, f"Добро пожаловать, {user.get_short_name()}! Выберите курс в каталоге.")
-        return redirect("courses:catalog")
-    return render(request, "accounts/register.html", {"form": form})
+from .forms import LoginForm, ProfileForm
 
 
 class LoginView(auth_views.LoginView):

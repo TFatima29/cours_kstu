@@ -4,10 +4,20 @@
 <p class="crumbs"><a href="{% url 'dashboard:user_list' %}">Пользователи</a></p>
 <div class="page-head">
   <div style="display:flex;gap:16px;align-items:center">{% include "partials/avatar.html" with u=target size="lg" %}<div><h1 style="margin:0">{{ target.full_name }}</h1><div class="muted">{{ target.email }}, с {{ target.date_joined|date:"d.m.Y" }}</div></div></div>
+  <div class="actions">
+  <form method="post" action="{% url 'dashboard:user_reset_password' target.pk %}" data-confirm="Сгенерировать новый пароль и отправить его на {{ target.email }}?">{% csrf_token %}<button class="btn btn-secondary" type="submit">Выдать новый пароль</button></form>
   {% if target != user and not target.is_superuser %}
     <form method="post" action="{% url 'dashboard:user_block' target.pk %}" {% if target.is_active %}data-confirm="Заблокировать пользователя?"{% endif %}>{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button class="btn {% if target.is_active %}btn-secondary{% else %}btn-primary{% endif %}" type="submit">{% if target.is_active %}Заблокировать{% else %}Разблокировать{% endif %}</button></form>
   {% endif %}
+  </div>
 </div>
+{% if issued %}
+  <div class="panel" style="margin-bottom:20px">
+    <h2 style="margin-bottom:6px">Данные для входа</h2>
+    <p class="muted small">Показываются один раз. Если письмо не дошло, передайте их пользователю сами.</p>
+    <p style="margin:0">Логин: <strong>{{ issued.email }}</strong><br>Пароль: <strong style="font-size:1.15em">{{ issued.password }}</strong></p>
+  </div>
+{% endif %}
 {% if not target.is_active %}<div class="flash error" style="margin-bottom:20px">Пользователь заблокирован и не может войти.</div>{% endif %}
 
 <h2>Прогресс по курсам</h2>

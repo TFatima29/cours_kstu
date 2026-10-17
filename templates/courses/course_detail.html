@@ -39,9 +39,9 @@
         {% endif %}
       {% else %}
         <div class="actions">
-          <a class="btn btn-primary" href="{% url 'accounts:register' %}">Зарегистрироваться и записаться</a>
-          <a class="btn btn-ghost" href="{% url 'accounts:login' %}?next={{ request.path }}">У меня есть аккаунт</a>
+          <a class="btn btn-primary" href="{% url 'accounts:login' %}?next={{ request.path }}">Войти, чтобы записаться</a>
         </div>
+        <p class="small muted" style="margin-top:10px">Логин и пароль выдаёт администратор платформы — они приходят на e-mail.</p>
       {% endif %}
     </div>
     <div class="cover">{% include "partials/cover.html" %}</div>

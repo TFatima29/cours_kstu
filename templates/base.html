@@ -67,8 +67,7 @@
             </div>
           </details>
         {% else %}
-          <a class="btn btn-ghost btn-sm guest-login" href="{% url 'accounts:login' %}">Войти</a>
-          <a class="btn btn-primary btn-sm" href="{% url 'accounts:register' %}">Регистрация</a>
+          <a class="btn btn-primary btn-sm guest-login" href="{% url 'accounts:login' %}">Войти</a>
         {% endif %}
         <button class="icon-btn menu-toggle" id="menu-toggle" type="button" aria-label="Меню" aria-expanded="false" aria-controls="main-nav">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>

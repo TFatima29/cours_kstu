@@ -1,7 +1,7 @@
 {% extends "dashboard/base_dash.html" %}
 {% block title %}Пользователи{% endblock %}
 {% block dash %}
-<div class="page-head"><h1>Пользователи</h1></div>
+<div class="page-head"><h1>Пользователи</h1><a class="btn btn-primary" href="{% url 'dashboard:user_create' %}">Добавить пользователя</a></div>
 <form method="get" class="actions" style="margin-bottom:20px">
   <label class="visually-hidden" for="uq">Поиск</label>
   <input type="search" id="uq" name="q" value="{{ query }}" placeholder="Имя или e-mail" style="max-width:320px">

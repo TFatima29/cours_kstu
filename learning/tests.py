@@ -35,23 +35,57 @@ def answers(level, correct=True):
 
 
 class AccountsTests(TestCase):
-    def test_register_logs_in_and_hashes_password(self):
-        r = self.client.post(
-            reverse("accounts:register"),
-            {"full_name": "Нургуль", "email": "N@Example.com", "password1": "Strong-pass-42", "password2": "Strong-pass-42"},
-        )
-        self.assertRedirects(r, reverse("courses:catalog"))
-        user = User.objects.get(email="n@example.com")
-        self.assertNotEqual(user.password, "Strong-pass-42")
-        self.assertTrue(user.check_password("Strong-pass-42"))
+    def test_no_self_registration(self):
+        self.assertEqual(self.client.get("/accounts/register/").status_code, 404)
+        self.assertNotContains(self.client.get(reverse("accounts:login")), "Зарегистрироваться")
 
-    def test_register_rejects_duplicate_email(self):
+    def test_admin_creates_user_and_credentials_are_emailed(self):
+        admin = User.objects.create_user("adm@b.kg", "Strong-pass-42", full_name="Админ", is_staff=True)
+        self.client.force_login(admin)
+        r = self.client.post(reverse("dashboard:user_create"), {"full_name": "Нургуль  А.", "email": "N@Example.com"})
+        user = User.objects.get(email="n@example.com")
+        self.assertRedirects(r, reverse("dashboard:user_detail", args=[user.pk]), fetch_redirect_response=False)
+        self.assertEqual(user.full_name, "Нургуль А.")
+        self.assertFalse(user.is_staff)
+        self.assertEqual(len(mail.outbox), 1)
+        body = mail.outbox[0].body
+        self.assertIn("n@example.com", body)
+        password = re.search(r"Пароль: (\S+)", body).group(1)
+        self.assertTrue(user.check_password(password))
+        self.assertNotEqual(user.password, password)  # в базе только хеш
+        # пароль показан администратору один раз
+        r = self.client.get(reverse("dashboard:user_detail", args=[user.pk]))
+        self.assertContains(r, password)
+        r = self.client.get(reverse("dashboard:user_detail", args=[user.pk]))
+        self.assertNotContains(r, password)
+        # новый пользователь входит с выданным паролем
+        self.client.logout()
+        r = self.client.post(reverse("accounts:login"), {"username": "n@example.com", "password": password})
+        self.assertRedirects(r, reverse("learning:my_courses"), fetch_redirect_response=False)
+
+    def test_admin_cannot_create_duplicate_email(self):
+        admin = User.objects.create_user("adm@b.kg", "Strong-pass-42", full_name="Админ", is_staff=True)
         User.objects.create_user("a@b.kg", "Strong-pass-42", full_name="A")
-        r = self.client.post(
-            reverse("accounts:register"),
-            {"full_name": "B", "email": "a@b.kg", "password1": "Strong-pass-42", "password2": "Strong-pass-42"},
-        )
-        self.assertContains(r, "уже зарегистрирован")
+        self.client.force_login(admin)
+        r = self.client.post(reverse("dashboard:user_create"), {"full_name": "B", "email": "A@b.kg"})
+        self.assertContains(r, "уже есть")
+
+    def test_admin_reissues_password(self):
+        admin = User.objects.create_user("adm@b.kg", "Strong-pass-42", full_name="Админ", is_staff=True)
+        user = User.objects.create_user("u@b.kg", "Old-pass-42", full_name="U")
+        self.client.force_login(admin)
+        self.client.post(reverse("dashboard:user_reset_password", args=[user.pk]))
+        user.refresh_from_db()
+        self.assertFalse(user.check_password("Old-pass-42"))
+        password = re.search(r"Пароль: (\S+)", mail.outbox[0].body).group(1)
+        self.assertTrue(user.check_password(password))
+
+    def test_regular_user_cannot_create_users(self):
+        user = User.objects.create_user("u@b.kg", "Strong-pass-42", full_name="U")
+        self.client.force_login(user)
+        r = self.client.post(reverse("dashboard:user_create"), {"full_name": "X", "email": "x@b.kg"})
+        self.assertEqual(r.status_code, 403)
+        self.assertFalse(User.objects.filter(email="x@b.kg").exists())
 
     def test_blocked_user_cannot_login(self):
         User.objects.create_user("b@b.kg", "Strong-pass-42", full_name="B", is_active=False)

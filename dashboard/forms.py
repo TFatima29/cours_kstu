@@ -1,6 +1,7 @@
 from django import forms
 from django.forms import BaseInlineFormSet, inlineformset_factory
 
+from accounts.models import User
 from courses.models import Category, Course, Lesson, Level, Material
 from quizzes.models import Choice, Question
 
@@ -98,3 +99,28 @@ class BaseChoiceFormSet(BaseInlineFormSet):
 ChoiceFormSet = inlineformset_factory(
     Question, Choice, fields=["text", "is_correct"], formset=BaseChoiceFormSet, extra=4, max_num=8, can_delete=True
 )
+
+
+class UserCreateForm(forms.ModelForm):
+    """А-5. Администратор создаёт учётную запись; пароль генерируется и отправляется на e-mail."""
+
+    class Meta:
+        model = User
+        fields = ["full_name", "email", "is_staff"]
+        labels = {"is_staff": "Администратор платформы"}
+        widgets = {
+            "full_name": forms.TextInput(attrs={"placeholder": "Фамилия и имя"}),
+            "email": forms.EmailInput(attrs={"placeholder": "name@example.com"}),
+        }
+
+    def clean_full_name(self):
+        name = " ".join(self.cleaned_data["full_name"].split())
+        if not name:
+            raise forms.ValidationError("Укажите имя.")
+        return name
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].strip().lower()
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError("Пользователь с таким e-mail уже есть.")
+        return email

@@ -12,7 +12,7 @@
     <p class="lede">Каждый кристалл — курс: чем больше уроков, тем он крупнее. Наведите или нажмите на любой, чтобы узнать, что внутри.</p>
     <div class="actions">
       <a class="btn btn-primary" href="#courses">Выбрать курс</a>
-      {% if not user.is_authenticated %}<a class="btn btn-secondary" href="{% url 'accounts:register' %}">Создать аккаунт</a>{% endif %}
+      {% if not user.is_authenticated %}<a class="btn btn-secondary" href="{% url 'accounts:login' %}">Войти</a>{% endif %}
     </div>
   </div>
   <a class="ice-scroll" href="#courses">вниз к курсам</a>
